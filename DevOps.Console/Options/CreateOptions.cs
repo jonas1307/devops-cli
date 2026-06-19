@@ -35,7 +35,7 @@ public class CreateOptions
     [Option('R', "related-id", Required = false, HelpText = "ID of the work item to relate to.")]
     public int? RelatedId { get; set; }
 
-    [Option("relation-type", Required = false, Default = "parent", HelpText = "Relation type: parent, child, related, blocks, blocked-by (default: parent).")]
+    [Option('r', "relation-type", Required = false, Default = "parent", HelpText = "Relation type: parent, child, related, blocks, blocked-by (default: parent).")]
     public string RelationType { get; set; }
 
     [Option('e', "estimate", Required = false, HelpText = "Estimated work in hours (Custom.EstimateWork).")]

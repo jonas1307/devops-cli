@@ -11,7 +11,7 @@ public class UpdateOptions
     [Option('p', "project", Required = false, HelpText = "Project name. Uses default if configured.")]
     public string Project { get; set; }
 
-    [Option('T', "title", Required = false, HelpText = "New title.")]
+    [Option('t', "title", Required = false, HelpText = "New title.")]
     public string Title { get; set; }
 
     [Option('s', "state", Required = false, HelpText = "New state (e.g., Active, Closed, Resolved).")]
@@ -47,6 +47,6 @@ public class UpdateOptions
     [Option('R', "related-id", Required = false, HelpText = "ID of the work item to relate to.")]
     public int? RelatedId { get; set; }
 
-    [Option("relation-type", Required = false, Default = "related", HelpText = "Relation type: parent, child, related, blocks, blocked-by (default: related).")]
+    [Option('r', "relation-type", Required = false, Default = "related", HelpText = "Relation type: parent, child, related, blocks, blocked-by (default: related).")]
     public string RelationType { get; set; }
 }

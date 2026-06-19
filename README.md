@@ -125,7 +125,7 @@ devops create -t "Task with custom field" -f "Custom.SomeField=value" -f "Custom
 | `--activity-type` | `-y` | Activity type (`Microsoft.VSTS.Common.Activity`), e.g., `Development`, `Testing`, `Design` |
 | `--field` | `-f` | Custom field in `Key=Value` format. Repeatable for multiple fields |
 | `--related-id` | `-R` | ID of the work item to relate to |
-| `--relation-type` | | Relation type (default: `parent`). See table below |
+| `--relation-type` | `-r` | Relation type (default: `parent`). See table below |
 
 **Relation types:**
 
@@ -145,7 +145,7 @@ Only fields explicitly provided are updated. No field has a default that causes 
 
 ```powershell
 devops update -i 1234 -s Closed
-devops update -i 1234 -T "New title" -P 1
+devops update -i 1234 -t "New title" -P 1
 devops update -i 1234 -a me -e 8 -y Testing
 devops update -i 1234 -c "Dependency resolved."
 devops update -i 1234 -I "MyProject\Sprint 4"
@@ -157,7 +157,7 @@ devops update -i 1234 -f "Custom.ReviewEstimate=2"
 |---|---|---|
 | `--id` | `-i` | Work item ID (required) |
 | `--project` | `-p` | Project name (uses default if configured) |
-| `--title` | `-T` | New title |
+| `--title` | `-t` | New title |
 | `--state` | `-s` | New state |
 | `--assigned-to` | `-a` | New assignee. Use `me` for the current user |
 | `--description` | `-d` | New description |
@@ -169,7 +169,7 @@ devops update -i 1234 -f "Custom.ReviewEstimate=2"
 | `--field` | `-f` | Custom field in `Key=Value` format. Repeatable |
 | `--comment` | `-c` | Add a comment to the work item history |
 | `--related-id` | `-R` | ID of the work item to relate to |
-| `--relation-type` | | Relation type (default: `related`). See `create` for valid values |
+| `--relation-type` | `-r` | Relation type (default: `related`). See `create` for valid values |
 
 ---
 

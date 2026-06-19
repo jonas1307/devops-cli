@@ -1,6 +1,9 @@
 using DevOps.Options;
 using Newtonsoft.Json;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace DevOps.Services;
 
@@ -12,6 +15,7 @@ public record Config
     public string DefaultTeam { get; set; }
     public string UserDisplayName { get; set; }
     public string UserEmail { get; set; }
+    public bool PatEncrypted { get; set; }
 }
 
 public static class ConfigService
@@ -37,13 +41,21 @@ public static class ConfigService
         if (!File.Exists(configPath))
             throw new FileNotFoundException($"{JSON_FILE_NAME} does not exist. Run 'config --org <url> --pat <token>' first.");
 
-        return JsonConvert.DeserializeObject<Config>(File.ReadAllText(configPath));
+        var config = JsonConvert.DeserializeObject<Config>(File.ReadAllText(configPath));
+
+        if (config.PatEncrypted && OperatingSystem.IsWindows())
+            config = config with { Pat = DecryptPat(config.Pat) };
+
+        return config;
     }
 
     public static void SaveConfig(ConfigOptions opts, string userDisplayName = null, string userEmail = null)
     {
         var configPath = GetConfigPath();
         var folderPath = Path.GetDirectoryName(configPath);
+
+        if (!Directory.Exists(folderPath))
+            Directory.CreateDirectory(folderPath);
 
         var existing = ConfigExists() ? LoadConfig() : new Config();
 
@@ -57,17 +69,13 @@ public static class ConfigService
             UserEmail = opts.Email ?? userEmail ?? existing.UserEmail
         };
 
-        if (!Directory.Exists(folderPath))
-            Directory.CreateDirectory(folderPath);
-
-        File.WriteAllText(configPath, JsonConvert.SerializeObject(config, Formatting.Indented));
+        WriteConfig(config);
     }
 
     public static void SaveDefaultProject(string project)
     {
-        var config = LoadConfig();
-        var updated = config with { DefaultProject = project };
-        File.WriteAllText(GetConfigPath(), JsonConvert.SerializeObject(updated, Formatting.Indented));
+        var config = LoadConfig() with { DefaultProject = project };
+        WriteConfig(config);
     }
 
     public static void DeleteConfig()
@@ -103,5 +111,38 @@ public static class ConfigService
         var config = LoadConfig();
         if (!string.IsNullOrEmpty(config.DefaultTeam)) return config.DefaultTeam;
         return $"{project} Team";
+    }
+
+    private static void WriteConfig(Config config)
+    {
+        var configPath = GetConfigPath();
+
+        if (OperatingSystem.IsWindows())
+            config = config with { Pat = EncryptPat(config.Pat), PatEncrypted = true };
+
+        File.WriteAllText(configPath, JsonConvert.SerializeObject(config, Formatting.Indented));
+
+        if (!OperatingSystem.IsWindows())
+            File.SetUnixFileMode(configPath, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+    }
+
+    [SupportedOSPlatform("windows")]
+    private static string EncryptPat(string pat)
+    {
+        var bytes = ProtectedData.Protect(
+            Encoding.UTF8.GetBytes(pat),
+            null,
+            DataProtectionScope.CurrentUser);
+        return Convert.ToBase64String(bytes);
+    }
+
+    [SupportedOSPlatform("windows")]
+    private static string DecryptPat(string encrypted)
+    {
+        var bytes = ProtectedData.Unprotect(
+            Convert.FromBase64String(encrypted),
+            null,
+            DataProtectionScope.CurrentUser);
+        return Encoding.UTF8.GetString(bytes);
     }
 }

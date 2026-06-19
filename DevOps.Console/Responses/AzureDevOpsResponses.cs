@@ -1,0 +1,165 @@
+using Newtonsoft.Json;
+
+namespace DevOps.Responses;
+
+public class WorkItemResponse
+{
+    [JsonProperty("id")]
+    public int Id { get; set; }
+
+    [JsonProperty("url")]
+    public string Url { get; set; }
+
+    [JsonProperty("fields")]
+    public WorkItemFields Fields { get; set; }
+}
+
+public class WorkItemFields
+{
+    [JsonProperty("System.Title")]
+    public string Title { get; set; }
+
+    [JsonProperty("System.State")]
+    public string State { get; set; }
+
+    [JsonProperty("System.WorkItemType")]
+    public string WorkItemType { get; set; }
+
+    [JsonProperty("System.AssignedTo")]
+    public AssignedTo AssignedTo { get; set; }
+
+    [JsonProperty("System.Description")]
+    public string Description { get; set; }
+
+    [JsonProperty("Microsoft.VSTS.Common.Priority")]
+    public int? Priority { get; set; }
+
+    [JsonProperty("System.CreatedDate")]
+    public DateTime CreatedDate { get; set; }
+
+    [JsonProperty("System.ChangedDate")]
+    public DateTime ChangedDate { get; set; }
+
+    [JsonProperty("System.TeamProject")]
+    public string TeamProject { get; set; }
+}
+
+public class AssignedTo
+{
+    [JsonProperty("displayName")]
+    public string DisplayName { get; set; }
+
+    [JsonProperty("uniqueName")]
+    public string UniqueName { get; set; }
+}
+
+public class WiqlResponse
+{
+    [JsonProperty("workItems")]
+    public List<WiqlWorkItemRef> WorkItems { get; set; }
+}
+
+public class WiqlWorkItemRef
+{
+    [JsonProperty("id")]
+    public int Id { get; set; }
+
+    [JsonProperty("url")]
+    public string Url { get; set; }
+}
+
+public class WorkItemBatchResponse
+{
+    [JsonProperty("value")]
+    public List<WorkItemResponse> Value { get; set; }
+}
+
+public class IterationListResponse
+{
+    [JsonProperty("value")]
+    public List<IterationResponse> Value { get; set; }
+}
+
+public class IterationResponse
+{
+    [JsonProperty("id")]
+    public string Id { get; set; }
+
+    [JsonProperty("name")]
+    public string Name { get; set; }
+
+    [JsonProperty("path")]
+    public string Path { get; set; }
+
+    [JsonProperty("attributes")]
+    public IterationAttributes Attributes { get; set; }
+}
+
+public class IterationAttributes
+{
+    [JsonProperty("startDate")]
+    public DateTime? StartDate { get; set; }
+
+    [JsonProperty("finishDate")]
+    public DateTime? FinishDate { get; set; }
+
+    [JsonProperty("timeFrame")]
+    public string TimeFrame { get; set; }
+}
+
+public class PipelineListResponse
+{
+    [JsonProperty("value")]
+    public List<PipelineResponse> Value { get; set; }
+}
+
+public class PipelineResponse
+{
+    [JsonProperty("id")]
+    public int Id { get; set; }
+
+    [JsonProperty("name")]
+    public string Name { get; set; }
+
+    [JsonProperty("folder")]
+    public string Folder { get; set; }
+
+    [JsonProperty("revision")]
+    public int Revision { get; set; }
+
+    [JsonProperty("url")]
+    public string Url { get; set; }
+}
+
+public class TeamFieldValuesResponse
+{
+    [JsonProperty("defaultValue")]
+    public string DefaultValue { get; set; }
+}
+
+public class ConnectionDataResponse
+{
+    [JsonProperty("authenticatedUser")]
+    public AuthenticatedUser AuthenticatedUser { get; set; }
+}
+
+public class AuthenticatedUser
+{
+    [JsonProperty("providerDisplayName")]
+    public string DisplayName { get; set; }
+
+    [JsonProperty("properties")]
+    public IdentityProperties Properties { get; set; }
+}
+
+public class IdentityProperties
+{
+    [JsonProperty("Account")]
+    public IdentityPropertyValue Account { get; set; }
+}
+
+public class IdentityPropertyValue
+{
+    [JsonProperty("$value")]
+    public string Value { get; set; }
+}

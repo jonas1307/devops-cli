@@ -8,7 +8,7 @@ public class StateOptions
     [Option('i', "id", Required = true, HelpText = "Work item ID(s). Repeatable: -i 1 -i 2.")]
     public IEnumerable<int> Ids { get; set; }
 
-    [Value(0, Required = true, MetaName = "state", HelpText = "Target state (e.g., \"In Progress\", \"Closed\", \"Done\").")]
+    [Option('s', "state", Required = true, HelpText = "Target state (e.g., \"In Progress\", \"Closed\", \"Done\").")]
     public string State { get; set; }
 
     [Option('p', "project", Required = false, HelpText = "Project name. Uses default if configured.")]

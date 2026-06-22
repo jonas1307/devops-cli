@@ -194,7 +194,7 @@ Shortcut for `update --state`. Fetches the current state first and shows the ful
 
 ```powershell
 devops state -i 1234 -s "In Progress"
-devops state -i 1234 -i 5678 -s "Closed"
+devops state -i 1234 5678 9012 -s "Closed"
 devops state -i 1234 -s "Done" -p AnotherProject
 ```
 
@@ -202,7 +202,7 @@ Output: `Work item #1234: To Do -> In Progress`
 
 | Option | Alias | Description |
 |---|---|---|
-| `--id` | `-i` | Work item ID (required). Repeatable: `-i 1 -i 2` |
+| `--id` | `-i` | Work item ID (required). Multiple IDs space-separated: `-i 1 2 3` |
 | `--state` | `-s` | Target state (required, e.g. `In Progress`, `Closed`, `Done`) |
 | `--project` | `-p` | Project name (uses default if configured) |
 

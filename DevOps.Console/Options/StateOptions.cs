@@ -5,7 +5,7 @@ namespace DevOps.Options;
 [Verb("state", HelpText = "Change the state of a work item.")]
 public class StateOptions
 {
-    [Option('i', "id", Required = true, HelpText = "Work item ID(s). Repeatable: -i 1 -i 2.")]
+    [Option('i', "id", Required = true, HelpText = "Work item ID(s). Space-separated after the flag: -i 1 2 3.")]
     public IEnumerable<int> Ids { get; set; }
 
     [Option('s', "state", Required = true, HelpText = "Target state (e.g., \"In Progress\", \"Closed\", \"Done\").")]

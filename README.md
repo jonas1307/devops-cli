@@ -188,21 +188,21 @@ devops comment -i 1234 "Blocked by infra team." -p AnotherProject
 
 ---
 
-### `state` — Change the state of a work item
+### `state` — Change the state of one or more work items
 
-Shortcut for `update --state`. Fetches the current state first and shows the full transition in the output.
+Shortcut for `update --state`. Fetches the current state first and shows the full transition in the output. Multiple IDs are processed in parallel.
 
 ```powershell
 devops state -i 1234 "In Progress"
-devops state -i 1234 "Closed"
+devops state -i 1234 -i 5678 "Closed"
 devops state -i 1234 "Done" -p AnotherProject
 ```
 
-Output: `Work item #1234: To Do → In Progress`
+Output: `Work item #1234: To Do -> In Progress`
 
 | Option | Alias | Description |
 |---|---|---|
-| `--id` | `-i` | Work item ID (required) |
+| `--id` | `-i` | Work item ID (required). Repeatable: `-i 1 -i 2` |
 | `state` | | Target state (positional, required) |
 | `--project` | `-p` | Project name (uses default if configured) |
 

@@ -476,26 +476,29 @@ static async Task<int> PipelinesAction(PipelinesOptions opts, CancellationToken 
 
 static async Task<int> StateAction(StateOptions opts, CancellationToken ct)
 {
-    try
+    var project = ConfigService.ResolveProject(opts.Project);
+    var operations = new List<JsonPatchOperation>
     {
-        var project = ConfigService.ResolveProject(opts.Project);
-        var current = await HttpService.GetWorkItem(opts.Id, project, ct);
-        var previousState = current.Fields.State;
+        new() { Op = "add", Path = "/fields/System.State", Value = opts.State }
+    };
 
-        var operations = new List<JsonPatchOperation>
+    var tasks = opts.Ids.Select(async id =>
+    {
+        try
         {
-            new() { Op = "add", Path = "/fields/System.State", Value = opts.State }
-        };
+            var current = await HttpService.GetWorkItem(id, project, ct);
+            var previousState = current.Fields.State;
+            var item = await HttpService.UpdateWorkItem(id, project, operations, ct);
+            ConsoleHelper.WriteSuccess($"Work item #{item.Id}: {previousState} -> {item.Fields.State}");
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelper.WriteError($"Error on #{id}: {ex.Message}");
+        }
+    });
 
-        var item = await HttpService.UpdateWorkItem(opts.Id, project, operations, ct);
-        ConsoleHelper.WriteSuccess($"Work item #{item.Id}: {previousState} -> {item.Fields.State}");
-        return 0;
-    }
-    catch (Exception ex)
-    {
-        ConsoleHelper.WriteError($"Error: {ex.Message}");
-        return 1;
-    }
+    await Task.WhenAll(tasks);
+    return 0;
 }
 
 static Task<int> OpenAction(OpenOptions opts, CancellationToken ct)

@@ -5,7 +5,7 @@ internal static class ActionHelpers
     internal static string Truncate(string value, int max)
     {
         if (string.IsNullOrEmpty(value)) return string.Empty;
-        return value.Length > max ? value[..(max - 1)] + "…" : value;
+        return value.Length > max ? value[..(max - 3)] + "..." : value;
     }
 
     internal static string ResolveRelationType(string friendly) => friendly?.ToLowerInvariant() switch

@@ -59,7 +59,7 @@ internal static class NormalizeAction
                 if (opts.DryRun)
                 {
                     Console.WriteLine($"  #{item.Id}: '{item.Fields.Title}'");
-                    Console.WriteLine($"        → '{newTitle}'");
+                    Console.WriteLine($"        -> '{newTitle}'");
                     continue;
                 }
 

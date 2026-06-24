@@ -42,6 +42,9 @@ public class WorkItemFields
 
     [JsonProperty("System.TeamProject")]
     public string TeamProject { get; set; }
+
+    [JsonProperty("System.Parent")]
+    public int? ParentId { get; set; }
 }
 
 public class AssignedTo

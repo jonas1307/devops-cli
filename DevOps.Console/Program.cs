@@ -9,7 +9,7 @@ using DevOps.Validators;
 using var cts = new CancellationTokenSource();
 Console.CancelKeyPress += (_, e) => { e.Cancel = true; cts.Cancel(); };
 
-var result = Parser.Default.ParseArguments<ConfigOptions, GetOptions, ListOptions, MineOptions, CreateOptions, UpdateOptions, StateOptions, CommentOptions, PipelinesOptions, OpenOptions>(args);
+var result = Parser.Default.ParseArguments<ConfigOptions, GetOptions, ListOptions, MineOptions, CreateOptions, UpdateOptions, StateOptions, CommentOptions, PipelinesOptions, OpenOptions, NormalizeOptions>(args);
 
 await result.MapResult(
     (ConfigOptions opts) => ConfigAction(opts, cts.Token),
@@ -22,6 +22,7 @@ await result.MapResult(
     (CommentOptions opts) => CommentAction(opts, cts.Token),
     (PipelinesOptions opts) => PipelinesAction(opts, cts.Token),
     (OpenOptions opts) => OpenAction(opts, cts.Token),
+    (NormalizeOptions opts) => NormalizeAction(opts, cts.Token),
     _ => Task.FromResult(1)
 );
 
@@ -524,6 +525,80 @@ static Task<int> OpenAction(OpenOptions opts, CancellationToken ct)
     {
         ConsoleHelper.WriteError($"Error: {ex.Message}");
         return Task.FromResult(1);
+    }
+}
+
+static async Task<int> NormalizeAction(NormalizeOptions opts, CancellationToken ct)
+{
+    try
+    {
+        var project = ConfigService.ResolveProject(opts.Project);
+        var items = await HttpService.ListWorkItems(project, opts.State, "Task", null, null, opts.ParentId, ct);
+
+        var unnormalized = new System.Text.RegularExpressions.Regex(@"^\[.+\] .+");
+        var alreadyNormalized = new System.Text.RegularExpressions.Regex(@"^(PBI|BUG|HOTFIX|ANALYSIS) \d+ - ");
+
+        var toNormalize = items
+            .Where(i => unnormalized.IsMatch(i.Fields.Title ?? "") && !alreadyNormalized.IsMatch(i.Fields.Title ?? ""))
+            .ToList();
+
+        if (toNormalize.Count == 0)
+        {
+            Console.WriteLine("No items to normalize.");
+            return 0;
+        }
+
+        if (opts.DryRun)
+            Console.WriteLine($"[dry-run] {toNormalize.Count} item(s) would be renamed:\n");
+        else
+            Console.WriteLine($"Normalizing {toNormalize.Count} item(s)...\n");
+
+        var parentCache = new Dictionary<int, WorkItemResponse>();
+
+        foreach (var item in toNormalize)
+        {
+            if (item.Fields.ParentId is null)
+            {
+                ConsoleHelper.WriteError($"#{item.Id} '{item.Fields.Title}' has no parent — skipped.");
+                continue;
+            }
+
+            var parentId = item.Fields.ParentId.Value;
+
+            if (!parentCache.TryGetValue(parentId, out var parent))
+            {
+                parent = await HttpService.GetWorkItem(parentId, project, ct);
+                parentCache[parentId] = parent;
+            }
+
+            var abbrev = parent.Fields.WorkItemType == "Product Backlog Item"
+                ? "PBI"
+                : parent.Fields.WorkItemType?.ToUpperInvariant() ?? "UNKNOWN";
+
+            var newTitle = $"{abbrev} {parentId} - {item.Fields.Title}";
+
+            if (opts.DryRun)
+            {
+                Console.WriteLine($"  #{item.Id}: '{item.Fields.Title}'");
+                Console.WriteLine($"        → '{newTitle}'");
+                continue;
+            }
+
+            var operations = new List<JsonPatchOperation>
+            {
+                new() { Op = "add", Path = "/fields/System.Title", Value = newTitle }
+            };
+
+            await HttpService.UpdateWorkItem(item.Id, project, operations, ct);
+            ConsoleHelper.WriteSuccess($"#{item.Id}: renamed to '{newTitle}'");
+        }
+
+        return 0;
+    }
+    catch (Exception ex)
+    {
+        ConsoleHelper.WriteError($"Error: {ex.Message}");
+        return 1;
     }
 }
 

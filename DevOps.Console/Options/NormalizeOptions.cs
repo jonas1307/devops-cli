@@ -11,6 +11,9 @@ public class NormalizeOptions
     [Option('s', "state", Required = false, HelpText = "Filter by state (e.g., Active, New).")]
     public string State { get; set; }
 
+    [Option('a', "assigned-to", Required = false, Default = "me", HelpText = "Filter by assignee. Use 'me' for the current user, or 'any' for all. Defaults to 'me'.")]
+    public string AssignedTo { get; set; }
+
     [Option('p', "parent", Required = false, HelpText = "Restrict to children of a specific parent ID.")]
     public int? ParentId { get; set; }
 

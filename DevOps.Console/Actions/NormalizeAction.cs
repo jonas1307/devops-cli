@@ -16,7 +16,8 @@ internal static class NormalizeAction
         try
         {
             var project = ConfigService.ResolveProject(opts.Project);
-            var items = await HttpService.ListWorkItems(project, opts.State, "Task", null, null, opts.ParentId, ct);
+            var assignedTo = opts.AssignedTo.Equals("any", StringComparison.OrdinalIgnoreCase) ? null : opts.AssignedTo;
+            var items = await HttpService.ListWorkItems(project, opts.State, "Task", assignedTo, null, opts.ParentId, ct);
 
             var toNormalize = items
                 .Where(i => Unnormalized.IsMatch(i.Fields.Title ?? "") && !AlreadyNormalized.IsMatch(i.Fields.Title ?? ""))

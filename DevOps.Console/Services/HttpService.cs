@@ -82,6 +82,10 @@ public static class HttpService
         var batchRequest = new RestRequest($"{project}/_apis/wit/workitems", Method.Get);
         batchRequest.AddQueryParameter("api-version", API_VERSION);
         batchRequest.AddQueryParameter("ids", ids);
+        batchRequest.AddQueryParameter("fields",
+            "System.Id,System.Title,System.State,System.WorkItemType,System.AssignedTo," +
+            "System.Description,Microsoft.VSTS.Common.Priority,System.CreatedDate," +
+            "System.ChangedDate,System.TeamProject,System.Parent");
 
         var batchResponse = await client.ExecuteAsync(batchRequest, cancellationToken);
 

@@ -35,7 +35,7 @@ public static class HttpService
         return JsonConvert.DeserializeObject<WorkItemResponse>(response.Content);
     }
 
-    public static async Task<List<WorkItemResponse>> ListWorkItems(string project, string state, string type, string assignedTo, string customQuery, CancellationToken cancellationToken = default)
+    public static async Task<List<WorkItemResponse>> ListWorkItems(string project, string state, string type, string assignedTo, string customQuery, int? parentId = null, CancellationToken cancellationToken = default)
     {
         using var client = CreateClient();
 
@@ -58,6 +58,9 @@ public static class HttpService
 
         if (!string.IsNullOrEmpty(customQuery))
             conditions.Add(customQuery);
+
+        if (parentId.HasValue)
+            conditions.Add($"[System.Parent] = {parentId.Value}");
 
         var wiql = $"SELECT [System.Id] FROM WorkItems WHERE {string.Join(" AND ", conditions)} ORDER BY [System.ChangedDate] DESC";
 

@@ -5,7 +5,7 @@ namespace DevOps.Options;
 [Verb("list", HelpText = "List work items.")]
 public class ListOptions
 {
-    [Option('p', "project", Required = false, HelpText = "Project name. Uses default if configured.")]
+    [Option('P', "project", Required = false, HelpText = "Project name. Uses default if configured.")]
     public string Project { get; set; }
 
     [Option('s', "state", Required = false, HelpText = "Filter by state (e.g., Active, Closed, Resolved).")]
@@ -19,6 +19,9 @@ public class ListOptions
 
     [Option('q', "query", Required = false, HelpText = "WIQL WHERE clause for advanced filtering.")]
     public string Query { get; set; }
+
+    [Option('p', "parent", Required = false, HelpText = "Filter by parent work item ID.")]
+    public int? ParentId { get; set; }
 
     [Option("ids", Required = false, HelpText = "Show work item IDs in output.")]
     public bool ShowIds { get; set; }

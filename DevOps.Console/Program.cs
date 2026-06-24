@@ -136,7 +136,7 @@ static async Task<int> ListAction(ListOptions opts, CancellationToken ct)
     try
     {
         var project = ConfigService.ResolveProject(opts.Project);
-        var items = await HttpService.ListWorkItems(project, opts.State, opts.Type, opts.AssignedTo, opts.Query, ct);
+        var items = await HttpService.ListWorkItems(project, opts.State, opts.Type, opts.AssignedTo, opts.Query, opts.ParentId, ct);
 
         if (items.Count == 0)
         {
@@ -180,7 +180,7 @@ static async Task<int> MineAction(MineOptions opts, CancellationToken ct)
     try
     {
         var project = ConfigService.ResolveProject(opts.Project);
-        var items = await HttpService.ListWorkItems(project, opts.State, opts.Type, "me", opts.Query, ct);
+        var items = await HttpService.ListWorkItems(project, opts.State, opts.Type, "me", opts.Query, opts.ParentId, ct);
 
         if (items.Count == 0)
         {

@@ -5,7 +5,7 @@ namespace DevOps.Options;
 [Verb("mine", HelpText = "List work items assigned to me.")]
 public class MineOptions
 {
-    [Option('p', "project", Required = false, HelpText = "Project name. Uses default if configured.")]
+    [Option('P', "project", Required = false, HelpText = "Project name. Uses default if configured.")]
     public string Project { get; set; }
 
     [Option('s', "state", Required = false, HelpText = "Filter by state (e.g., Active, Closed, Resolved).")]
@@ -16,4 +16,7 @@ public class MineOptions
 
     [Option('q', "query", Required = false, HelpText = "Additional WIQL WHERE clause.")]
     public string Query { get; set; }
+
+    [Option('p', "parent", Required = false, HelpText = "Filter by parent work item ID.")]
+    public int? ParentId { get; set; }
 }

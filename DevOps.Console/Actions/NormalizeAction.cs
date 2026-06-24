@@ -37,21 +37,21 @@ internal static class NormalizeAction
 
             foreach (var item in toNormalize)
             {
-                if (item.Fields.ParentId is null)
+                var parentId = item.Fields.ParentId ?? opts.ParentId;
+
+                if (parentId is null)
                 {
                     ConsoleHelper.WriteError($"#{item.Id} '{item.Fields.Title}' has no parent — skipped.");
                     continue;
                 }
 
-                var parentId = item.Fields.ParentId.Value;
-
-                if (!parentCache.TryGetValue(parentId, out var abbrev))
+                if (!parentCache.TryGetValue(parentId.Value, out var abbrev))
                 {
-                    var parent = await HttpService.GetWorkItem(parentId, project, ct);
+                    var parent = await HttpService.GetWorkItem(parentId.Value, project, ct);
                     abbrev = parent.Fields.WorkItemType == "Product Backlog Item"
                         ? "PBI"
                         : parent.Fields.WorkItemType?.ToUpperInvariant() ?? "UNKNOWN";
-                    parentCache[parentId] = abbrev;
+                    parentCache[parentId.Value] = abbrev;
                 }
 
                 var newTitle = $"{abbrev} {parentId} - {item.Fields.Title}";

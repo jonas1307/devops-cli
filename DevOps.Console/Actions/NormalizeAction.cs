@@ -49,9 +49,7 @@ internal static class NormalizeAction
                 if (!parentCache.TryGetValue(parentId.Value, out var abbrev))
                 {
                     var parent = await HttpService.GetWorkItem(parentId.Value, project, ct);
-                    abbrev = parent.Fields.WorkItemType == "Product Backlog Item"
-                        ? "PBI"
-                        : parent.Fields.WorkItemType?.ToUpperInvariant() ?? "UNKNOWN";
+                    abbrev = ActionHelpers.ParentTypeAbbreviation(parent.Fields.WorkItemType);
                     parentCache[parentId.Value] = abbrev;
                 }
 

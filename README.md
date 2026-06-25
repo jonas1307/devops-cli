@@ -67,14 +67,16 @@ devops mine
 devops mine -s Active
 devops mine -t Bug
 devops mine -s "In Progress" -t Task
+devops mine -p 1234            # only children of work item 1234
 ```
 
 | Option | Alias | Description |
 |---|---|---|
-| `--project` | `-p` | Project name (uses default if configured) |
+| `--project` | `-P` | Project name (uses default if configured) |
 | `--state` | `-s` | Filter by state |
 | `--type` | `-t` | Filter by work item type |
 | `--query` | `-q` | Additional WIQL WHERE clause |
+| `--parent` | `-p` | Filter by parent work item ID |
 
 ---
 
@@ -84,17 +86,19 @@ devops mine -s "In Progress" -t Task
 devops list
 devops list -s Active
 devops list -t Bug -a me
-devops list -p MyProject -s "In Progress" -t Task
+devops list -P MyProject -s "In Progress" -t Task
+devops list -p 1234            # only children of work item 1234
 devops list -q "[System.IterationPath] UNDER 'MyProject\\Sprint 1'"
 ```
 
 | Option | Alias | Description |
 |---|---|---|
-| `--project` | `-p` | Project name (uses default if configured) |
+| `--project` | `-P` | Project name (uses default if configured) |
 | `--state` | `-s` | Filter by state (e.g., `Active`, `Closed`, `Resolved`) |
 | `--type` | `-t` | Filter by work item type (e.g., `Task`, `Bug`, `User Story`) |
 | `--assigned-to` | `-a` | Filter by assignee. Use `me` for the current user |
 | `--query` | `-q` | WIQL WHERE clause for advanced filtering |
+| `--parent` | `-p` | Filter by parent work item ID |
 
 ---
 
@@ -108,6 +112,7 @@ devops create -t "New auth endpoint" --type "User Story" -s Active -a me -P 2
 devops create -t "Implement service" -e 6 -y Development -R 1234
 devops create -t "Backlog item" -I "MyProject\Backlog"
 devops create -t "Task with custom field" -f "Custom.SomeField=value" -f "Custom.Another=other"
+devops create -t "Análise Técnica" -R 1234 --normalize   # title becomes "PBI 1234 - Análise Técnica"
 ```
 
 | Option | Alias | Description |
@@ -126,6 +131,7 @@ devops create -t "Task with custom field" -f "Custom.SomeField=value" -f "Custom
 | `--field` | `-f` | Custom field in `Key=Value` format. Repeatable for multiple fields |
 | `--related-id` | `-R` | ID of the work item to relate to |
 | `--relation-type` | `-r` | Relation type (default: `parent`). See table below |
+| `--normalize` | | Prefix the title with the parent type and ID (e.g., `PBI 1234 - <title>`). Requires a parent relation |
 
 **Relation types:**
 
@@ -170,6 +176,28 @@ devops update -i 1234 -f "Custom.ReviewEstimate=2"
 | `--comment` | `-c` | Add a comment to the work item history |
 | `--related-id` | `-R` | ID of the work item to relate to |
 | `--relation-type` | `-r` | Relation type (default: `related`). See `create` for valid values |
+
+---
+
+### `normalize` — Normalize task titles with a parent prefix
+
+Renames Tasks whose title follows the `[Role] Description` pattern (e.g., created by third parties) to `<PARENT_TYPE> <PARENT_ID> - [Role] Description`. The parent type is abbreviated: `Product Backlog Item` becomes `PBI`; any other type is uppercased (e.g., `Bug` -> `BUG`). Tasks already normalized or without a parent are skipped. By default only Tasks assigned to the current user are processed.
+
+```powershell
+devops normalize                      # normalize my tasks
+devops normalize --dry-run            # preview without applying
+devops normalize -s Active            # only tasks in a given state
+devops normalize -p 1234              # only children of work item 1234
+devops normalize -a any               # all tasks, regardless of assignee
+```
+
+| Option | Alias | Description |
+|---|---|---|
+| `--project` | `-P` | Project name (uses default if configured) |
+| `--state` | `-s` | Filter by state |
+| `--assigned-to` | `-a` | Filter by assignee. Use `me` (default) or `any` for all |
+| `--parent` | `-p` | Restrict to children of a specific parent ID |
+| `--dry-run` | `-n` | Preview changes without applying them |
 
 ---
 

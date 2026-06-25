@@ -46,4 +46,7 @@ public class CreateOptions
 
     [Option('f', "field", Required = false, HelpText = "Custom field in Key=Value format. Repeatable: -f Key1=Value1 -f Key2=Value2.")]
     public IEnumerable<string> Fields { get; set; }
+
+    [Option("normalize", Required = false, HelpText = "Prefix the title with the parent type and ID (e.g., 'PBI 12345 - <title>'). Requires a parent relation.")]
+    public bool Normalize { get; set; }
 }

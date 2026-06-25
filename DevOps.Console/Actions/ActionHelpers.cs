@@ -8,6 +8,11 @@ internal static class ActionHelpers
         return value.Length > max ? value[..(max - 3)] + "..." : value;
     }
 
+    internal static string ParentTypeAbbreviation(string workItemType) =>
+        workItemType == "Product Backlog Item"
+            ? "PBI"
+            : workItemType?.ToUpperInvariant() ?? "UNKNOWN";
+
     internal static string ResolveRelationType(string friendly) => friendly?.ToLowerInvariant() switch
     {
         "parent" => "System.LinkTypes.Hierarchy-Reverse",

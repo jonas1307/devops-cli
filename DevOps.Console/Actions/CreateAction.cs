@@ -67,9 +67,24 @@ internal static class CreateAction
             if (needArea)
                 Console.WriteLine($"Using team area: {areaPath}");
 
+            var title = opts.Title;
+
+            if (opts.Normalize)
+            {
+                if (!opts.RelatedId.HasValue || !string.Equals(opts.RelationType, "parent", StringComparison.OrdinalIgnoreCase))
+                {
+                    ConsoleHelper.WriteError("--normalize requires a parent relation (use --related-id <id> with --relation-type parent).");
+                    return 1;
+                }
+
+                var parent = await HttpService.GetWorkItem(opts.RelatedId.Value, project, ct);
+                var abbrev = ActionHelpers.ParentTypeAbbreviation(parent.Fields.WorkItemType);
+                title = $"{abbrev} {opts.RelatedId.Value} - {opts.Title}";
+            }
+
             var operations = new List<JsonPatchOperation>
             {
-                new() { Op = "add", Path = "/fields/System.Title", Value = opts.Title },
+                new() { Op = "add", Path = "/fields/System.Title", Value = title },
                 new() { Op = "add", Path = "/fields/System.IterationPath", Value = iterationPath },
                 new() { Op = "add", Path = "/fields/System.AreaPath", Value = areaPath }
             };

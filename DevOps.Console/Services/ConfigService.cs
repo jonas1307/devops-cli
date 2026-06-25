@@ -7,10 +7,18 @@ using System.Text;
 
 namespace DevOps.Services;
 
+public static class AuthModes
+{
+    public const string Pat = "pat";
+    public const string Entra = "entra";
+}
+
 public record Config
 {
     public string OrgUrl { get; set; }
     public string Pat { get; set; }
+    public string TenantId { get; set; }
+    public string AuthMode { get; set; }
     public string DefaultProject { get; set; }
     public string DefaultTeam { get; set; }
     public string UserDisplayName { get; set; }
@@ -23,14 +31,12 @@ public static class ConfigService
     private const string APPLICATION_NAME = "DevOps.Console";
     private const string JSON_FILE_NAME = "config.json";
 
-    private static string GetConfigPath()
-    {
-        var folderPath = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+    public static string GetConfigDirectory() =>
+        RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), APPLICATION_NAME)
             : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config", APPLICATION_NAME);
 
-        return Path.Combine(folderPath, JSON_FILE_NAME);
-    }
+    private static string GetConfigPath() => Path.Combine(GetConfigDirectory(), JSON_FILE_NAME);
 
     public static bool ConfigExists() => File.Exists(GetConfigPath());
 
@@ -39,17 +45,17 @@ public static class ConfigService
         var configPath = GetConfigPath();
 
         if (!File.Exists(configPath))
-            throw new FileNotFoundException($"{JSON_FILE_NAME} does not exist. Run 'config --org <url> --pat <token>' first.");
+            throw new FileNotFoundException($"{JSON_FILE_NAME} does not exist. Run 'config --org <url> --pat <token>' or 'config --org <url> --login' first.");
 
         var config = JsonConvert.DeserializeObject<Config>(File.ReadAllText(configPath));
 
-        if (config.PatEncrypted && OperatingSystem.IsWindows())
+        if (config.PatEncrypted && OperatingSystem.IsWindows() && !string.IsNullOrEmpty(config.Pat))
             config = config with { Pat = DecryptPat(config.Pat) };
 
         return config;
     }
 
-    public static void SaveConfig(ConfigOptions opts, string userDisplayName = null, string userEmail = null)
+    public static void SaveConfig(ConfigOptions opts, string userDisplayName = null, string userEmail = null, string authMode = null)
     {
         var configPath = GetConfigPath();
         var folderPath = Path.GetDirectoryName(configPath);
@@ -59,10 +65,16 @@ public static class ConfigService
 
         var existing = ConfigExists() ? LoadConfig() : new Config();
 
+        var resolvedAuthMode = authMode
+            ?? (!string.IsNullOrEmpty(opts.Pat) ? AuthModes.Pat : null)
+            ?? existing.AuthMode;
+
         var config = new Config
         {
             OrgUrl = opts.OrgUrl ?? existing.OrgUrl,
             Pat = opts.Pat ?? existing.Pat,
+            TenantId = opts.Tenant ?? existing.TenantId,
+            AuthMode = resolvedAuthMode,
             DefaultProject = opts.Project ?? existing.DefaultProject,
             DefaultTeam = opts.Team ?? existing.DefaultTeam,
             UserDisplayName = userDisplayName ?? existing.UserDisplayName,
@@ -102,7 +114,7 @@ public static class ConfigService
         if (!string.IsNullOrEmpty(config.UserEmail))
             return config.UserEmail;
 
-        throw new InvalidOperationException("Cannot resolve 'me': user email not found in config. Run 'config --org <url> --pat <token>' to refresh user info.");
+        throw new InvalidOperationException("Cannot resolve 'me': user email not found in config. Run 'config --login' or set it with 'config --email <your@email.com>'.");
     }
 
     public static string ResolveTeam(string project, string team = null)
@@ -117,7 +129,7 @@ public static class ConfigService
     {
         var configPath = GetConfigPath();
 
-        if (OperatingSystem.IsWindows())
+        if (OperatingSystem.IsWindows() && !string.IsNullOrEmpty(config.Pat))
             config = config with { Pat = EncryptPat(config.Pat), PatEncrypted = true };
 
         File.WriteAllText(configPath, JsonConvert.SerializeObject(config, Formatting.Indented));

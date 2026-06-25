@@ -11,6 +11,15 @@ public class ConfigOptions
     [Option('p', "pat", Required = false, HelpText = "Personal Access Token for authentication.")]
     public string Pat { get; set; }
 
+    [Option('l', "login", Required = false, HelpText = "Sign in interactively with Microsoft Entra ID (opens a browser).")]
+    public bool Login { get; set; }
+
+    [Option("logout", Required = false, HelpText = "Sign out and clear the cached Entra ID token.")]
+    public bool Logout { get; set; }
+
+    [Option("tenant", Required = false, HelpText = "Entra ID tenant ID or domain to sign in against (defaults to your home tenant).")]
+    public string Tenant { get; set; }
+
     [Option('P', "project", Required = false, HelpText = "Default project name used when --project is omitted from other commands.")]
     public string Project { get; set; }
 

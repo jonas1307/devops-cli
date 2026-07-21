@@ -10,6 +10,10 @@ obj/
 publish/
 *.pubxml.user
 
+## NuGet packaging output
+nupkg/
+*.nupkg
+
 ## OS
 .DS_Store
 Thumbs.db

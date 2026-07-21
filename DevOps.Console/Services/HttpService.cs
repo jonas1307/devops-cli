@@ -10,19 +10,32 @@ public static class HttpService
 {
     private const string API_VERSION = "7.1";
 
-    private static RestClient CreateClient()
+    private static async Task<RestClient> CreateClientAsync(CancellationToken cancellationToken)
     {
         var config = ConfigService.LoadConfig();
-        var options = new RestClientOptions(config.OrgUrl)
+
+        IAuthenticator authenticator;
+        if (config.AuthMode == AuthModes.Entra)
         {
-            Authenticator = new HttpBasicAuthenticator(string.Empty, config.Pat)
-        };
+            var token = await AuthService.GetAccessTokenAsync(config.TenantId, cancellationToken);
+            authenticator = new JwtAuthenticator(token);
+        }
+        else if (!string.IsNullOrEmpty(config.Pat))
+        {
+            authenticator = new HttpBasicAuthenticator(string.Empty, config.Pat);
+        }
+        else
+        {
+            throw new InvalidOperationException("No authentication configured. Run 'config --pat <token>' or 'config --login'.");
+        }
+
+        var options = new RestClientOptions(config.OrgUrl) { Authenticator = authenticator };
         return new RestClient(options);
     }
 
     public static async Task<WorkItemResponse> GetWorkItem(int id, string project, CancellationToken cancellationToken = default)
     {
-        using var client = CreateClient();
+        using var client = await CreateClientAsync(cancellationToken);
         var request = new RestRequest($"{project}/_apis/wit/workitems/{id}", Method.Get);
         request.AddQueryParameter("api-version", API_VERSION);
         request.AddQueryParameter("$expand", "all");
@@ -37,7 +50,7 @@ public static class HttpService
 
     public static async Task<List<WorkItemResponse>> ListWorkItems(string project, string state, string type, string assignedTo, string customQuery, int? parentId = null, CancellationToken cancellationToken = default)
     {
-        using var client = CreateClient();
+        using var client = await CreateClientAsync(cancellationToken);
 
         var conditions = new List<string>
         {
@@ -97,7 +110,7 @@ public static class HttpService
 
     public static async Task<string> GetDefaultAreaPath(string project, string team, CancellationToken cancellationToken = default)
     {
-        using var client = CreateClient();
+        using var client = await CreateClientAsync(cancellationToken);
         var request = new RestRequest($"{project}/{Uri.EscapeDataString(team)}/_apis/work/teamsettings/teamfieldvalues", Method.Get);
         request.AddQueryParameter("api-version", API_VERSION);
 
@@ -113,7 +126,7 @@ public static class HttpService
 
     public static async Task<WorkItemResponse> CreateWorkItem(string project, string type, List<JsonPatchOperation> operations, CancellationToken cancellationToken = default)
     {
-        using var client = CreateClient();
+        using var client = await CreateClientAsync(cancellationToken);
         var request = new RestRequest($"{project}/_apis/wit/workitems/${Uri.EscapeDataString(type)}", Method.Post);
         request.AddQueryParameter("api-version", API_VERSION);
         request.AddHeader("Content-Type", "application/json-patch+json");
@@ -129,7 +142,7 @@ public static class HttpService
 
     public static async Task<List<PipelineResponse>> ListPipelines(string project, string nameFilter, CancellationToken cancellationToken = default)
     {
-        using var client = CreateClient();
+        using var client = await CreateClientAsync(cancellationToken);
         var request = new RestRequest($"{project}/_apis/pipelines", Method.Get);
         request.AddQueryParameter("api-version", API_VERSION);
 
@@ -148,7 +161,7 @@ public static class HttpService
 
     public static async Task<AuthenticatedUser> GetCurrentUser(CancellationToken cancellationToken = default)
     {
-        using var client = CreateClient();
+        using var client = await CreateClientAsync(cancellationToken);
         var request = new RestRequest("_apis/connectiondata", Method.Get);
 
         var response = await client.ExecuteAsync(request, cancellationToken);
@@ -162,7 +175,7 @@ public static class HttpService
 
     public static async Task<IterationResponse> GetCurrentIteration(string project, string team, CancellationToken cancellationToken = default)
     {
-        using var client = CreateClient();
+        using var client = await CreateClientAsync(cancellationToken);
         var request = new RestRequest($"{project}/{Uri.EscapeDataString(team)}/_apis/work/teamsettings/iterations", Method.Get);
         request.AddQueryParameter("api-version", API_VERSION);
         request.AddQueryParameter("$timeframe", "current");
@@ -179,7 +192,7 @@ public static class HttpService
 
     public static async Task<WorkItemResponse> UpdateWorkItem(int id, string project, List<JsonPatchOperation> operations, CancellationToken cancellationToken = default)
     {
-        using var client = CreateClient();
+        using var client = await CreateClientAsync(cancellationToken);
         var request = new RestRequest($"{project}/_apis/wit/workitems/{id}", Method.Patch);
         request.AddQueryParameter("api-version", API_VERSION);
         request.AddHeader("Content-Type", "application/json-patch+json");

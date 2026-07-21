@@ -20,9 +20,11 @@ internal static class ConfigAction
 
         if (opts.Reset)
         {
+            var tenant = ConfigService.ConfigExists() ? ConfigService.LoadConfig().TenantId : null;
+            await AuthService.SignOutAsync(tenant, ct);
             ConfigService.DeleteConfig();
             CacheService.Clear();
-            ConsoleHelper.WriteSuccess("Configuration removed.");
+            ConsoleHelper.WriteSuccess("Configuration removed and signed out.");
             return 0;
         }
 
@@ -33,43 +35,70 @@ internal static class ConfigAction
             return 0;
         }
 
+        if (opts.Logout)
+        {
+            var tenant = ConfigService.ConfigExists() ? ConfigService.LoadConfig().TenantId : null;
+            await AuthService.SignOutAsync(tenant, ct);
+            ConsoleHelper.WriteSuccess("Signed out of Microsoft Entra ID.");
+            return 0;
+        }
+
         if (opts.Show)
         {
             if (!ConfigService.ConfigExists())
             {
-                ConsoleHelper.WriteError("No configuration found. Run 'config --org <url> --pat <token>' first.");
+                ConsoleHelper.WriteError("No configuration found. Run 'config --org <url> --pat <token>' or 'config --org <url> --login' first.");
                 return 1;
             }
 
             var config = ConfigService.LoadConfig();
-            var pat = config.Pat;
-            var maskedPat = pat is { Length: > 4 }
-                ? $"{"*".PadRight(pat.Length - 4, '*')}{pat[^4..]}"
-                : "****";
+
             Console.WriteLine($"Organization : {config.OrgUrl}");
-            Console.WriteLine($"PAT          : {maskedPat}");
+            Console.WriteLine($"Auth mode    : {DescribeAuthMode(config.AuthMode)}");
+
+            if (config.AuthMode == AuthModes.Entra)
+            {
+                var signedInAs = await AuthService.GetSignedInUsernameAsync(config.TenantId);
+                Console.WriteLine($"Tenant       : {config.TenantId ?? "(home tenant)"}");
+                Console.WriteLine($"Signed in    : {signedInAs ?? "no (run 'config --login')"}");
+            }
+            else if (config.AuthMode == AuthModes.Pat)
+            {
+                var pat = config.Pat;
+                var maskedPat = pat is { Length: > 4 }
+                    ? $"{"*".PadRight(pat.Length - 4, '*')}{pat[^4..]}"
+                    : "****";
+                Console.WriteLine($"PAT          : {maskedPat}");
+            }
+
             if (!string.IsNullOrEmpty(config.DefaultProject))
                 Console.WriteLine($"Default Proj : {config.DefaultProject}");
             if (!string.IsNullOrEmpty(config.DefaultTeam))
                 Console.WriteLine($"Default Team : {config.DefaultTeam}");
             if (!string.IsNullOrEmpty(config.UserDisplayName))
-                Console.WriteLine($"Logged in as : {config.UserDisplayName} ({config.UserEmail})");
+                Console.WriteLine($"User         : {config.UserDisplayName} ({config.UserEmail})");
             return 0;
         }
 
-        string userDisplayName = null;
-        string userEmail = null;
+        if (opts.Login)
+            return await SignInFlow(opts, ct);
 
-        if (!string.IsNullOrEmpty(opts.OrgUrl) || !string.IsNullOrEmpty(opts.Pat))
+        // PAT or plain settings (org/project/team/email) flow.
+        string patUserDisplayName = null;
+        string patUserEmail = null;
+
+        if (!string.IsNullOrEmpty(opts.Pat))
         {
+            // Persist the PAT first so the user lookup authenticates with it.
+            ConfigService.SaveConfig(opts, authMode: AuthModes.Pat);
             try
             {
                 var user = await HttpService.GetCurrentUser(ct);
-                userDisplayName = user.DisplayName;
-                userEmail = user.Properties?.Account?.Value;
+                patUserDisplayName = user.DisplayName;
+                patUserEmail = user.Properties?.Account?.Value;
 
-                if (userEmail == null)
-                    ConsoleHelper.WriteError("Warning: could not detect your email automatically. Use 'config --email <your@email.com>' to set it manually so '--assigned-to me' works.");
+                if (patUserEmail == null)
+                    ConsoleHelper.WriteError("Warning: could not detect your email automatically. Use 'config --email <your@email.com>' so '--assigned-to me' works.");
             }
             catch (Exception ex)
             {
@@ -77,12 +106,55 @@ internal static class ConfigAction
             }
         }
 
-        ConfigService.SaveConfig(opts, userDisplayName, userEmail);
+        ConfigService.SaveConfig(opts, patUserDisplayName, patUserEmail);
 
-        if (userDisplayName != null && userEmail != null)
-            ConsoleHelper.WriteSuccess($"Configuration saved. Logged in as: {userDisplayName} ({userEmail})");
+        if (patUserDisplayName != null && patUserEmail != null)
+            ConsoleHelper.WriteSuccess($"Configuration saved. Logged in as: {patUserDisplayName} ({patUserEmail})");
         else
             ConsoleHelper.WriteSuccess("Configuration saved.");
         return 0;
     }
+
+    private static async Task<int> SignInFlow(ConfigOptions opts, CancellationToken ct)
+    {
+        // Persist org/tenant/project/team/email and switch to Entra mode before signing in.
+        ConfigService.SaveConfig(opts, authMode: AuthModes.Entra);
+
+        try
+        {
+            var tenant = ConfigService.LoadConfig().TenantId;
+            var result = await AuthService.SignInAsync(tenant, ct);
+
+            string userDisplayName = null;
+            string userEmail = null;
+            try
+            {
+                var user = await HttpService.GetCurrentUser(ct);
+                userDisplayName = user.DisplayName;
+                userEmail = user.Properties?.Account?.Value;
+            }
+            catch (Exception ex)
+            {
+                ConsoleHelper.WriteError($"Warning: signed in, but could not fetch user info ({ex.Message}). Ensure --org is set.");
+            }
+
+            userEmail ??= result.Account?.Username;
+            ConfigService.SaveConfig(opts, userDisplayName, userEmail, AuthModes.Entra);
+
+            ConsoleHelper.WriteSuccess($"Signed in as {userDisplayName ?? result.Account?.Username} ({userEmail}).");
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelper.WriteError($"Sign-in failed: {ex.Message}");
+            return 1;
+        }
+    }
+
+    private static string DescribeAuthMode(string authMode) => authMode switch
+    {
+        AuthModes.Entra => "Microsoft Entra ID",
+        AuthModes.Pat => "Personal Access Token",
+        _ => "not configured"
+    };
 }

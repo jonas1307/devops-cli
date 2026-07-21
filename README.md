@@ -5,7 +5,7 @@ CLI for interacting with Azure DevOps via REST API, without depending on the `az
 ## Requirements
 
 - [.NET 10 Runtime](https://dotnet.microsoft.com/download/dotnet/10.0)
-- Azure DevOps Personal Access Token (see [PAT permissions](#pat-permissions) below)
+- Authentication via **either** a Microsoft Entra ID account **or** an Azure DevOps Personal Access Token (see [Authentication](#authentication) below)
 
 ## Installation
 
@@ -17,27 +17,43 @@ Add the `publish` directory to your `PATH`, or copy the executable to a director
 
 ## Configuration
 
+Pick one authentication method:
+
 ```powershell
+# Option A — Microsoft Entra ID (interactive browser sign-in)
+devops config -o https://dev.azure.com/myorg
+devops config --login
+
+# Option B — Personal Access Token
 devops config -o https://dev.azure.com/myorg -p <PAT>
+```
+
+Then the shared settings:
+
+```powershell
 devops config -P MyProject              # set default project
 devops config -T "MyProject Team"       # set default team (for iteration and area resolution)
 devops config -e your@email.com         # set email manually if auto-detection fails
 devops config --show                    # display current configuration
-devops config --reset                   # remove all configuration
+devops config --logout                  # sign out of Entra ID (clear the cached token)
+devops config --reset                   # remove all configuration and sign out
 devops config --refresh-cache           # force re-fetch of iteration and area on next create
 ```
 
-When `--org` or `--pat` is provided, the CLI automatically fetches your display name and email from Azure DevOps. The email is used to resolve `--assigned-to me`.
+When you sign in (`--login`) or provide a `--pat`, the CLI automatically fetches your display name and email from Azure DevOps. The email is used to resolve `--assigned-to me`.
 
 | Option | Alias | Description |
 |---|---|---|
 | `--org` | `-o` | Azure DevOps organization URL |
+| `--login` | `-l` | Sign in interactively with Microsoft Entra ID |
+| `--logout` | | Sign out and clear the cached Entra ID token |
+| `--tenant` | | Entra ID tenant ID or domain to sign in against (defaults to your home tenant) |
 | `--pat` | `-p` | Personal Access Token |
 | `--project` | `-P` | Default project (used when `--project` is omitted from other commands) |
 | `--team` | `-T` | Default team for resolving the active iteration and area path (defaults to `{Project} Team`) |
 | `--email` | `-e` | Your email address, used to resolve `--assigned-to me`. Set manually if auto-detection fails |
-| `--show` | | Display the current configuration (PAT masked) |
-| `--reset` | | Remove all local configuration and cache |
+| `--show` | | Display the current configuration (auth mode and masked secret) |
+| `--reset` | | Remove all local configuration and cache, and sign out |
 | `--refresh-cache` | | Force re-fetch of iteration and area path on next `create` |
 
 ---
@@ -267,7 +283,36 @@ devops pipelines -p AnotherProject
 
 ---
 
-## PAT Permissions
+## Authentication
+
+The CLI supports two authentication methods. Your choice is stored in `config.json` as the active auth mode and switching is just a matter of re-running `config`.
+
+### Microsoft Entra ID (recommended)
+
+```powershell
+devops config -o https://dev.azure.com/myorg
+devops config --login
+```
+
+Signs in through an interactive browser flow (MSAL), using the well-known public client of the Azure CLI — no app registration is required. The token is scoped to Azure DevOps (`499b84ac-1321-427f-aa17-267ca6975798/.default`) and cached securely (DPAPI on Windows, the keychain on macOS, an encrypted file on Linux), then refreshed silently. Your effective permissions are those your account already has in the organization.
+
+> The Azure CLI (`az`) does **not** need to be installed. The sign-in is performed by MSAL inside the CLI; only the Azure CLI's public *client ID* is reused as an identifier. (This does require that the "Microsoft Azure CLI" application itself is allowed in your Entra tenant.)
+
+If your account is a guest in another tenant or your organization enforces Conditional Access, pass the tenant explicitly:
+
+```powershell
+devops config --login --tenant contoso.onmicrosoft.com
+```
+
+Entra sign-in requires the organization policy *"Allow access via Microsoft Entra authentication"* to be enabled (on by default for Entra-backed organizations).
+
+**Session lifetime.** Access tokens are refreshed silently, so you normally sign in once and stay authenticated for weeks — the token cache survives terminal restarts and reboots. A new interactive sign-in is only needed after long inactivity, a credential change, or when your organization's Conditional Access policy requires it. In those cases a regular command stops with a clear message asking you to run `devops config --login` again; the CLI never opens a browser unexpectedly during other commands (keeping it safe for scripts and CI).
+
+### Personal Access Token
+
+```powershell
+devops config -o https://dev.azure.com/myorg -p <PAT>
+```
 
 Go to **User Settings → Personal Access Tokens → New Token** and grant the following scopes:
 
@@ -275,3 +320,5 @@ Go to **User Settings → Personal Access Tokens → New Token** and grant the f
 |---|---|---|
 | Work Items | Read & Write | All work item commands |
 | Build | Read | `pipelines` |
+
+The PAT is stored encrypted (DPAPI) on Windows and in an owner-only file (`600`) on Linux/macOS.

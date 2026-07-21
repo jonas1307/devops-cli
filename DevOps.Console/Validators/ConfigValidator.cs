@@ -8,11 +8,12 @@ public class ConfigValidator : AbstractValidator<ConfigOptions>
     public ConfigValidator()
     {
         RuleFor(x => x)
-            .Must(x => x.Show || x.Reset || x.RefreshCache ||
+            .Must(x => x.Show || x.Reset || x.RefreshCache || x.Login || x.Logout ||
                        !string.IsNullOrEmpty(x.OrgUrl) || !string.IsNullOrEmpty(x.Pat) ||
+                       !string.IsNullOrEmpty(x.Tenant) ||
                        !string.IsNullOrEmpty(x.Project) || !string.IsNullOrEmpty(x.Team) ||
                        !string.IsNullOrEmpty(x.Email))
-            .WithMessage("Provide at least one option: --org, --pat, --project, --team, --email, --show, --reset, or --refresh-cache.");
+            .WithMessage("Provide at least one option: --org, --pat, --login, --logout, --tenant, --project, --team, --email, --show, --reset, or --refresh-cache.");
 
         When(x => !string.IsNullOrEmpty(x.OrgUrl), () =>
         {

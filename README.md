@@ -296,6 +296,8 @@ devops config --login
 
 Signs in through an interactive browser flow (MSAL), using the well-known public client of the Azure CLI — no app registration is required. The token is scoped to Azure DevOps (`499b84ac-1321-427f-aa17-267ca6975798/.default`) and cached securely (DPAPI on Windows, the keychain on macOS, an encrypted file on Linux), then refreshed silently. Your effective permissions are those your account already has in the organization.
 
+> The Azure CLI (`az`) does **not** need to be installed. The sign-in is performed by MSAL inside the CLI; only the Azure CLI's public *client ID* is reused as an identifier. (This does require that the "Microsoft Azure CLI" application itself is allowed in your Entra tenant.)
+
 If your account is a guest in another tenant or your organization enforces Conditional Access, pass the tenant explicitly:
 
 ```powershell
@@ -303,6 +305,8 @@ devops config --login --tenant contoso.onmicrosoft.com
 ```
 
 Entra sign-in requires the organization policy *"Allow access via Microsoft Entra authentication"* to be enabled (on by default for Entra-backed organizations).
+
+**Session lifetime.** Access tokens are refreshed silently, so you normally sign in once and stay authenticated for weeks — the token cache survives terminal restarts and reboots. A new interactive sign-in is only needed after long inactivity, a credential change, or when your organization's Conditional Access policy requires it. In those cases a regular command stops with a clear message asking you to run `devops config --login` again; the CLI never opens a browser unexpectedly during other commands (keeping it safe for scripts and CI).
 
 ### Personal Access Token
 

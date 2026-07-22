@@ -159,6 +159,53 @@ public static class HttpService
         return pipelines;
     }
 
+    public static async Task<List<PipelineRunResponse>> ListPipelineRuns(string project, int pipelineId, CancellationToken cancellationToken = default)
+    {
+        using var client = await CreateClientAsync(cancellationToken);
+        var request = new RestRequest($"{project}/_apis/pipelines/{pipelineId}/runs", Method.Get);
+        request.AddQueryParameter("api-version", API_VERSION);
+
+        var response = await client.ExecuteAsync(request, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+            throw new Exception($"Failed to list runs for pipeline {pipelineId}. Status: {response.StatusCode}. {response.Content}");
+
+        return JsonConvert.DeserializeObject<PipelineRunListResponse>(response.Content).Value ?? [];
+    }
+
+    public static async Task<PipelineRunResponse> QueuePipelineRun(string project, int pipelineId, string branch, CancellationToken cancellationToken = default)
+    {
+        using var client = await CreateClientAsync(cancellationToken);
+        var request = new RestRequest($"{project}/_apis/pipelines/{pipelineId}/runs", Method.Post);
+        request.AddQueryParameter("api-version", API_VERSION);
+
+        string payload = "{}";
+        if (!string.IsNullOrEmpty(branch))
+        {
+            var refName = branch.StartsWith("refs/", StringComparison.OrdinalIgnoreCase) ? branch : $"refs/heads/{branch}";
+            var body = new PipelineRunRequest
+            {
+                Resources = new PipelineRunResources
+                {
+                    Repositories = new Dictionary<string, PipelineRepositoryResource>
+                    {
+                        ["self"] = new PipelineRepositoryResource { RefName = refName }
+                    }
+                }
+            };
+            payload = JsonConvert.SerializeObject(body);
+        }
+
+        request.AddStringBody(payload, DataFormat.Json);
+
+        var response = await client.ExecuteAsync(request, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+            throw new Exception($"Failed to queue run for pipeline {pipelineId}. Status: {response.StatusCode}. {response.Content}");
+
+        return JsonConvert.DeserializeObject<PipelineRunResponse>(response.Content);
+    }
+
     public static async Task<AuthenticatedUser> GetCurrentUser(CancellationToken cancellationToken = default)
     {
         using var client = await CreateClientAsync(cancellationToken);

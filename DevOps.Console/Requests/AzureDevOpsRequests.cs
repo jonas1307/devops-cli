@@ -28,3 +28,21 @@ public class WorkItemRelation
     [JsonProperty("url")]
     public string Url { get; set; }
 }
+
+public class PipelineRunRequest
+{
+    [JsonProperty("resources")]
+    public PipelineRunResources Resources { get; set; }
+}
+
+public class PipelineRunResources
+{
+    [JsonProperty("repositories")]
+    public Dictionary<string, PipelineRepositoryResource> Repositories { get; set; }
+}
+
+public class PipelineRepositoryResource
+{
+    [JsonProperty("refName")]
+    public string RefName { get; set; }
+}

@@ -320,6 +320,26 @@ Output columns: `ID`, `NAME`, `STATE` (e.g. `inProgress`, `completed`), `RESULT`
 
 ---
 
+### `run` — Queue a new pipeline run
+
+Triggers a new run of a pipeline. Without `--branch`, it runs the pipeline's default branch.
+
+```powershell
+devops run -i 42
+devops run -i 42 -b main
+devops run -i 42 -b refs/heads/release/1.0 -p AnotherProject
+```
+
+On success it prints the new run ID, its state, and a link to follow it in the browser.
+
+| Option | Alias | Description |
+|---|---|---|
+| `--id` | `-i` | Pipeline (definition) ID (required). See `pipelines` |
+| `--project` | `-p` | Project name (uses default if configured) |
+| `--branch` | `-b` | Branch to run (`main` or `refs/heads/main`). Defaults to the pipeline's default branch |
+
+---
+
 ## Authentication
 
 The CLI supports two authentication methods. Your choice is stored in `config.json` as the active auth mode and switching is just a matter of re-running `config`.

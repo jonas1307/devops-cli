@@ -159,6 +159,21 @@ public class PipelineRunResponse
 
     [JsonProperty("finishedDate")]
     public DateTime? FinishedDate { get; set; }
+
+    [JsonProperty("_links")]
+    public PipelineRunLinks Links { get; set; }
+}
+
+public class PipelineRunLinks
+{
+    [JsonProperty("web")]
+    public PipelineRunLink Web { get; set; }
+}
+
+public class PipelineRunLink
+{
+    [JsonProperty("href")]
+    public string Href { get; set; }
 }
 
 public class TeamFieldValuesResponse

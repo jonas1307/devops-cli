@@ -16,6 +16,7 @@ var result = Parser.Default.ParseArguments<
     CommentOptions,
     PipelinesOptions,
     RunsOptions,
+    RunOptions,
     OpenOptions,
     NormalizeOptions>(args);
 
@@ -30,6 +31,7 @@ await result.MapResult(
     (CommentOptions opts) => CommentAction.Execute(opts, cts.Token),
     (PipelinesOptions opts) => PipelinesAction.Execute(opts, cts.Token),
     (RunsOptions opts) => RunsAction.Execute(opts, cts.Token),
+    (RunOptions opts) => RunAction.Execute(opts, cts.Token),
     (OpenOptions opts) => OpenAction.Execute(opts, cts.Token),
     (NormalizeOptions opts) => NormalizeAction.Execute(opts, cts.Token),
     _ => Task.FromResult(1)

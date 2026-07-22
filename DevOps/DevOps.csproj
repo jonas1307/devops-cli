@@ -10,7 +10,7 @@
 
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>devops</ToolCommandName>
-    <PackageId>azdevops-cli</PackageId>
+    <PackageId>azure-devops-cli</PackageId>
     <Version>1.0.0</Version>
     <Description>CLI for managing Azure DevOps work items and pipelines via the REST API, without depending on the az CLI.</Description>
     <Authors>Jonas Lima de Amorim</Authors>

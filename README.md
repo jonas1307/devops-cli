@@ -12,14 +12,14 @@ CLI for interacting with Azure DevOps via REST API, without depending on the `az
 Install as a [.NET Global Tool](https://learn.microsoft.com/dotnet/core/tools/global-tools) from NuGet:
 
 ```powershell
-dotnet tool install -g azdevops-cli
+dotnet tool install -g azure-devops-cli
 ```
 
 Update or uninstall:
 
 ```powershell
-dotnet tool update -g azdevops-cli
-dotnet tool uninstall -g azdevops-cli
+dotnet tool update -g azure-devops-cli
+dotnet tool uninstall -g azure-devops-cli
 ```
 
 The command is invoked as `devops`.

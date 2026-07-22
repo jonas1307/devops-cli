@@ -36,7 +36,7 @@ internal static class PrListAction
             }
 
             AnsiConsole.Write(table);
-            ActionHelpers.WriteFooter($"Total: {prs.Count} pull request(s)");
+            ActionHelpers.WriteMuted($"Total: {prs.Count} pull request(s)");
             return 0;
         }
         catch (Exception ex)

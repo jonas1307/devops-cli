@@ -32,7 +32,7 @@ internal static class PipelinesAction
             }
 
             AnsiConsole.Write(table);
-            ActionHelpers.WriteFooter($"Total: {pipelines.Count} pipeline(s)");
+            ActionHelpers.WriteMuted($"Total: {pipelines.Count} pipeline(s)");
             return 0;
         }
         catch (Exception ex)

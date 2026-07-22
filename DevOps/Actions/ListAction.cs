@@ -33,7 +33,7 @@ internal static class ListAction
             }
 
             AnsiConsole.Write(table);
-            ActionHelpers.WriteFooter($"Total: {items.Count} work item(s)");
+            ActionHelpers.WriteMuted($"Total: {items.Count} work item(s)");
             return 0;
         }
         catch (Exception ex)

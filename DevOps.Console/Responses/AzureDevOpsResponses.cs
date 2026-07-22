@@ -225,6 +225,15 @@ public class PullRequestRepository
 {
     [JsonProperty("name")]
     public string Name { get; set; }
+
+    [JsonProperty("project")]
+    public PullRequestProject Project { get; set; }
+}
+
+public class PullRequestProject
+{
+    [JsonProperty("name")]
+    public string Name { get; set; }
 }
 
 public class PullRequestReviewer

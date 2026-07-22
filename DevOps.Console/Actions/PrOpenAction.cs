@@ -11,7 +11,7 @@ internal static class PrOpenAction
         try
         {
             var pr = await HttpService.GetPullRequest(opts.Id, ct);
-            var url = pr.Links?.Web?.Href;
+            var url = ActionHelpers.ResolvePullRequestUrl(pr);
 
             if (string.IsNullOrEmpty(url))
             {

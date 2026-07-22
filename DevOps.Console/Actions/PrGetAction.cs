@@ -31,7 +31,7 @@ internal static class PrGetAction
                 }
             }
 
-            Console.WriteLine($"URL      : {pr.Links?.Web?.Href ?? "-"}");
+            Console.WriteLine($"URL      : {ActionHelpers.ResolvePullRequestUrl(pr) ?? "-"}");
 
             if (!string.IsNullOrWhiteSpace(pr.Description))
             {

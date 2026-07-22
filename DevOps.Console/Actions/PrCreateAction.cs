@@ -15,7 +15,7 @@ internal static class PrCreateAction
 
             ConsoleHelper.WriteSuccess($"Pull request #{pr.PullRequestId} created{(pr.IsDraft ? " (draft)" : "")}: {pr.Title}");
 
-            var url = pr.Links?.Web?.Href;
+            var url = ActionHelpers.ResolvePullRequestUrl(pr);
             if (!string.IsNullOrEmpty(url))
                 Console.WriteLine($"URL: {url}");
 

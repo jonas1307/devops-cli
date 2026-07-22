@@ -1,6 +1,7 @@
 using DevOps.Options;
 using DevOps.Services;
 using DevOps.Utils;
+using Spectre.Console;
 
 namespace DevOps.Actions;
 
@@ -24,26 +25,21 @@ internal static class RunsAction
                 .Take(Math.Max(opts.Top, 1))
                 .ToList();
 
-            var idWidth = Math.Max(recent.Max(r => r.Id.ToString().Length), 2);
-            var nameWidth = Math.Min(Math.Max(recent.Max(r => (r.Name ?? "").Length), 4), 24);
-            var stateWidth = 11;
-            var resultWidth = 10;
-
-            Console.WriteLine($"{"ID".PadLeft(idWidth)}  {"NAME".PadRight(nameWidth)}  {"STATE".PadRight(stateWidth)}  {"RESULT".PadRight(resultWidth)}  CREATED");
-            Console.WriteLine(new string('-', idWidth + nameWidth + stateWidth + resultWidth + 22));
+            var table = ActionHelpers.NewTable("ID", "NAME", "STATE", "RESULT", "CREATED");
 
             foreach (var r in recent)
             {
-                var id = r.Id.ToString().PadLeft(idWidth);
-                var name = ActionHelpers.Truncate(r.Name ?? "-", nameWidth).PadRight(nameWidth);
-                var state = ActionHelpers.Truncate(r.State ?? "-", stateWidth).PadRight(stateWidth);
-                var runResult = ActionHelpers.Truncate(string.IsNullOrEmpty(r.Result) ? "-" : r.Result, resultWidth).PadRight(resultWidth);
                 var created = r.CreatedDate.HasValue ? r.CreatedDate.Value.ToString("yyyy/MM/dd HH:mm") : "-";
-                Console.WriteLine($"{id}  {name}  {state}  {runResult}  {created}");
+                table.AddRow(
+                    Markup.Escape(r.Id.ToString()),
+                    Markup.Escape(r.Name ?? "-"),
+                    ActionHelpers.ColorState(r.State),
+                    ActionHelpers.ColorResult(r.Result),
+                    Markup.Escape(created));
             }
 
-            Console.WriteLine();
-            Console.WriteLine($"Showing {recent.Count} of {runs.Count} run(s) for pipeline {opts.PipelineId}.");
+            AnsiConsole.Write(table);
+            ActionHelpers.WriteFooter($"Showing {recent.Count} of {runs.Count} run(s) for pipeline {opts.PipelineId}.");
             return 0;
         }
         catch (Exception ex)

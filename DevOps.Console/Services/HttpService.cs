@@ -159,6 +159,20 @@ public static class HttpService
         return pipelines;
     }
 
+    public static async Task<List<PipelineRunResponse>> ListPipelineRuns(string project, int pipelineId, CancellationToken cancellationToken = default)
+    {
+        using var client = await CreateClientAsync(cancellationToken);
+        var request = new RestRequest($"{project}/_apis/pipelines/{pipelineId}/runs", Method.Get);
+        request.AddQueryParameter("api-version", API_VERSION);
+
+        var response = await client.ExecuteAsync(request, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+            throw new Exception($"Failed to list runs for pipeline {pipelineId}. Status: {response.StatusCode}. {response.Content}");
+
+        return JsonConvert.DeserializeObject<PipelineRunListResponse>(response.Content).Value ?? [];
+    }
+
     public static async Task<AuthenticatedUser> GetCurrentUser(CancellationToken cancellationToken = default)
     {
         using var client = await CreateClientAsync(cancellationToken);

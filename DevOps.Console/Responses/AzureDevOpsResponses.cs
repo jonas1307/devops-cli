@@ -134,6 +134,33 @@ public class PipelineResponse
     public string Url { get; set; }
 }
 
+public class PipelineRunListResponse
+{
+    [JsonProperty("value")]
+    public List<PipelineRunResponse> Value { get; set; }
+}
+
+public class PipelineRunResponse
+{
+    [JsonProperty("id")]
+    public int Id { get; set; }
+
+    [JsonProperty("name")]
+    public string Name { get; set; }
+
+    [JsonProperty("state")]
+    public string State { get; set; }
+
+    [JsonProperty("result")]
+    public string Result { get; set; }
+
+    [JsonProperty("createdDate")]
+    public DateTime? CreatedDate { get; set; }
+
+    [JsonProperty("finishedDate")]
+    public DateTime? FinishedDate { get; set; }
+}
+
 public class TeamFieldValuesResponse
 {
     [JsonProperty("defaultValue")]

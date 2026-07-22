@@ -1,10 +1,59 @@
 using DevOps.Responses;
 using DevOps.Services;
+using Spectre.Console;
 
 namespace DevOps.Actions;
 
 internal static class ActionHelpers
 {
+    /// <summary>Creates a table with bold headers, sized to the terminal, using the configured border.</summary>
+    internal static Table NewTable(params string[] columns)
+    {
+        var table = new Table().Border(ResolveBorder()).Expand();
+        foreach (var column in columns)
+            table.AddColumn($"[bold]{Markup.Escape(column)}[/]");
+        return table;
+    }
+
+    private static TableBorder ResolveBorder()
+    {
+        string configured = null;
+        try
+        {
+            if (ConfigService.ConfigExists())
+                configured = ConfigService.LoadConfig().TableBorder;
+        }
+        catch { /* fall back to default */ }
+
+        return configured?.ToLowerInvariant() switch
+        {
+            "square" => TableBorder.Square,
+            "markdown" => TableBorder.Markdown,
+            _ => TableBorder.Minimal
+        };
+    }
+
+    /// <summary>Colors a status/state-like value (work item state, PR status, pipeline state).</summary>
+    internal static string ColorState(string state) => state?.ToLowerInvariant() switch
+    {
+        "active" or "inprogress" or "in progress" or "new" => $"[green]{Markup.Escape(state)}[/]",
+        "completed" or "closed" or "done" or "resolved" => $"[grey]{Markup.Escape(state)}[/]",
+        "abandoned" or "removed" => $"[red]{Markup.Escape(state)}[/]",
+        _ => Markup.Escape(string.IsNullOrEmpty(state) ? "-" : state)
+    };
+
+    /// <summary>Colors a pipeline run result.</summary>
+    internal static string ColorResult(string result) => result?.ToLowerInvariant() switch
+    {
+        "succeeded" => $"[green]{Markup.Escape(result)}[/]",
+        "failed" => $"[red]{Markup.Escape(result)}[/]",
+        "canceled" or "cancelled" => $"[yellow]{Markup.Escape(result)}[/]",
+        _ => Markup.Escape(string.IsNullOrEmpty(result) ? "-" : result)
+    };
+
+    /// <summary>Prints a dim footer line (e.g., totals) below a table.</summary>
+    internal static void WriteFooter(string text) => AnsiConsole.MarkupLine($"[dim]{Markup.Escape(text)}[/]");
+
     /// <summary>
     /// Resolves the browser URL for a pull request. The Azure DevOps PR payload
     /// often omits _links.web, so we fall back to building it from org/project/repo.

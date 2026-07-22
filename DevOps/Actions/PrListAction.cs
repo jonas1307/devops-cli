@@ -1,6 +1,7 @@
 using DevOps.Options;
 using DevOps.Services;
 using DevOps.Utils;
+using Spectre.Console;
 
 namespace DevOps.Actions;
 
@@ -20,29 +21,22 @@ internal static class PrListAction
                 return 0;
             }
 
-            var idWidth = Math.Max(prs.Max(p => p.PullRequestId.ToString().Length), 2);
-            var titleWidth = 40;
-            var statusWidth = 9;
-            var branchWidth = 18;
-            var authorWidth = 18;
-
-            Console.WriteLine($"{"ID".PadLeft(idWidth)}  {"TITLE".PadRight(titleWidth)}  {"STATUS".PadRight(statusWidth)}  {"SOURCE -> TARGET".PadRight(branchWidth * 2 + 4)}  AUTHOR");
-            Console.WriteLine(new string('-', idWidth + titleWidth + statusWidth + branchWidth * 2 + authorWidth + 14));
+            var table = ActionHelpers.NewTable("ID", "TITLE", "STATUS", "SOURCE", "TARGET", "AUTHOR");
 
             foreach (var pr in prs)
             {
-                var id = pr.PullRequestId.ToString().PadLeft(idWidth);
-                var title = ActionHelpers.Truncate((pr.IsDraft ? "[draft] " : "") + (pr.Title ?? "-"), titleWidth).PadRight(titleWidth);
-                var status2 = ActionHelpers.Truncate(pr.Status ?? "-", statusWidth).PadRight(statusWidth);
-                var src = ActionHelpers.Truncate(ActionHelpers.ShortBranch(pr.SourceRefName), branchWidth);
-                var tgt = ActionHelpers.Truncate(ActionHelpers.ShortBranch(pr.TargetRefName), branchWidth);
-                var branches = $"{src} -> {tgt}".PadRight(branchWidth * 2 + 4);
-                var author = ActionHelpers.Truncate(pr.CreatedBy?.DisplayName ?? "-", authorWidth);
-                Console.WriteLine($"{id}  {title}  {status2}  {branches}  {author}");
+                var title = (pr.IsDraft ? "[draft] " : "") + (pr.Title ?? "-");
+                table.AddRow(
+                    Markup.Escape(pr.PullRequestId.ToString()),
+                    Markup.Escape(title),
+                    ActionHelpers.ColorState(pr.Status),
+                    Markup.Escape(ActionHelpers.ShortBranch(pr.SourceRefName)),
+                    Markup.Escape(ActionHelpers.ShortBranch(pr.TargetRefName)),
+                    Markup.Escape(pr.CreatedBy?.DisplayName ?? "-"));
             }
 
-            Console.WriteLine();
-            Console.WriteLine($"Total: {prs.Count} pull request(s)");
+            AnsiConsole.Write(table);
+            ActionHelpers.WriteFooter($"Total: {prs.Count} pull request(s)");
             return 0;
         }
         catch (Exception ex)

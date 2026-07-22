@@ -37,4 +37,7 @@ public class ConfigOptions
 
     [Option('e', "email", Required = false, HelpText = "Your email address, used to resolve '--assigned-to me'. Set manually if auto-detection fails.")]
     public string Email { get; set; }
+
+    [Option("border", Required = false, HelpText = "Table border style for list output: minimal (default), square, or markdown.")]
+    public string Border { get; set; }
 }

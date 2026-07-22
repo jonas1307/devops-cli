@@ -28,8 +28,8 @@ internal static class ListAction
                     Markup.Escape(item.Id.ToString()),
                     Markup.Escape(item.Fields.WorkItemType ?? "-"),
                     ActionHelpers.ColorState(item.Fields.State),
-                    Markup.Escape(item.Fields.AssignedTo?.DisplayName ?? "-"),
-                    Markup.Escape(item.Fields.Title ?? "-"));
+                    Markup.Escape(ActionHelpers.Truncate(item.Fields.AssignedTo?.DisplayName ?? "-", 25)),
+                    Markup.Escape(ActionHelpers.Truncate(item.Fields.Title ?? "-", 70)));
             }
 
             AnsiConsole.Write(table);

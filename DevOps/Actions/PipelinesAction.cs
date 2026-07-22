@@ -27,8 +27,8 @@ internal static class PipelinesAction
                 var folder = string.IsNullOrWhiteSpace(p.Folder) || p.Folder == "\\" ? "-" : p.Folder;
                 table.AddRow(
                     Markup.Escape(p.Id.ToString()),
-                    Markup.Escape(p.Name ?? "-"),
-                    Markup.Escape(folder));
+                    Markup.Escape(ActionHelpers.Truncate(p.Name ?? "-", 45)),
+                    Markup.Escape(ActionHelpers.Truncate(folder, 40)));
             }
 
             AnsiConsole.Write(table);

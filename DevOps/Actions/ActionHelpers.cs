@@ -9,9 +9,9 @@ internal static class ActionHelpers
     /// <summary>Creates a table with bold headers, sized to the terminal, using the configured border.</summary>
     internal static Table NewTable(params string[] columns)
     {
-        var table = new Table().Border(ResolveBorder()).Expand();
+        var table = new Table().Border(ResolveBorder());
         foreach (var column in columns)
-            table.AddColumn($"[bold]{Markup.Escape(column)}[/]");
+            table.AddColumn(new TableColumn($"[bold]{Markup.Escape(column)}[/]") { NoWrap = true });
         return table;
     }
 

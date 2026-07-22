@@ -28,11 +28,11 @@ internal static class PrListAction
                 var title = (pr.IsDraft ? "[draft] " : "") + (pr.Title ?? "-");
                 table.AddRow(
                     Markup.Escape(pr.PullRequestId.ToString()),
-                    Markup.Escape(title),
+                    Markup.Escape(ActionHelpers.Truncate(title, 50)),
                     ActionHelpers.ColorState(pr.Status),
-                    Markup.Escape(ActionHelpers.ShortBranch(pr.SourceRefName)),
-                    Markup.Escape(ActionHelpers.ShortBranch(pr.TargetRefName)),
-                    Markup.Escape(pr.CreatedBy?.DisplayName ?? "-"));
+                    Markup.Escape(ActionHelpers.Truncate(ActionHelpers.ShortBranch(pr.SourceRefName), 24)),
+                    Markup.Escape(ActionHelpers.Truncate(ActionHelpers.ShortBranch(pr.TargetRefName), 24)),
+                    Markup.Escape(ActionHelpers.Truncate(pr.CreatedBy?.DisplayName ?? "-", 22)));
             }
 
             AnsiConsole.Write(table);

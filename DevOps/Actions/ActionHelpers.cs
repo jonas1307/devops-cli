@@ -9,7 +9,7 @@ internal static class ActionHelpers
     /// <summary>Creates a rounded table with bold headers, sized to the terminal.</summary>
     internal static Table NewTable(params string[] columns)
     {
-        var table = new Table().Border(TableBorder.Rounded).Expand();
+        var table = new Table().Border(TableBorder.Minimal).Expand();
         foreach (var column in columns)
             table.AddColumn($"[bold]{Markup.Escape(column)}[/]");
         return table;

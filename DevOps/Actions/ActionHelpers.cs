@@ -6,13 +6,31 @@ namespace DevOps.Actions;
 
 internal static class ActionHelpers
 {
-    /// <summary>Creates a rounded table with bold headers, sized to the terminal.</summary>
+    /// <summary>Creates a table with bold headers, sized to the terminal, using the configured border.</summary>
     internal static Table NewTable(params string[] columns)
     {
-        var table = new Table().Border(TableBorder.Markdown).Expand();
+        var table = new Table().Border(ResolveBorder()).Expand();
         foreach (var column in columns)
             table.AddColumn($"[bold]{Markup.Escape(column)}[/]");
         return table;
+    }
+
+    private static TableBorder ResolveBorder()
+    {
+        string configured = null;
+        try
+        {
+            if (ConfigService.ConfigExists())
+                configured = ConfigService.LoadConfig().TableBorder;
+        }
+        catch { /* fall back to default */ }
+
+        return configured?.ToLowerInvariant() switch
+        {
+            "square" => TableBorder.Square,
+            "markdown" => TableBorder.Markdown,
+            _ => TableBorder.Minimal
+        };
     }
 
     /// <summary>Colors a status/state-like value (work item state, PR status, pipeline state).</summary>

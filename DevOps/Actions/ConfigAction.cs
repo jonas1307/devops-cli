@@ -77,6 +77,7 @@ internal static class ConfigAction
                 Console.WriteLine($"Default Team : {config.DefaultTeam}");
             if (!string.IsNullOrEmpty(config.UserDisplayName))
                 Console.WriteLine($"User         : {config.UserDisplayName} ({config.UserEmail})");
+            Console.WriteLine($"Table border : {config.TableBorder ?? "minimal"}");
             return 0;
         }
 

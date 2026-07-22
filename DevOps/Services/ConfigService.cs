@@ -24,6 +24,7 @@ public record Config
     public string UserDisplayName { get; set; }
     public string UserEmail { get; set; }
     public bool PatEncrypted { get; set; }
+    public string TableBorder { get; set; }
 }
 
 public static class ConfigService
@@ -78,7 +79,8 @@ public static class ConfigService
             DefaultProject = opts.Project ?? existing.DefaultProject,
             DefaultTeam = opts.Team ?? existing.DefaultTeam,
             UserDisplayName = userDisplayName ?? existing.UserDisplayName,
-            UserEmail = opts.Email ?? userEmail ?? existing.UserEmail
+            UserEmail = opts.Email ?? userEmail ?? existing.UserEmail,
+            TableBorder = opts.Border ?? existing.TableBorder
         };
 
         WriteConfig(config);

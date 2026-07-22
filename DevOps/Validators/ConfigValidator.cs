@@ -12,8 +12,15 @@ public class ConfigValidator : AbstractValidator<ConfigOptions>
                        !string.IsNullOrEmpty(x.OrgUrl) || !string.IsNullOrEmpty(x.Pat) ||
                        !string.IsNullOrEmpty(x.Tenant) ||
                        !string.IsNullOrEmpty(x.Project) || !string.IsNullOrEmpty(x.Team) ||
-                       !string.IsNullOrEmpty(x.Email))
-            .WithMessage("Provide at least one option: --org, --pat, --login, --logout, --tenant, --project, --team, --email, --show, --reset, or --refresh-cache.");
+                       !string.IsNullOrEmpty(x.Email) || !string.IsNullOrEmpty(x.Border))
+            .WithMessage("Provide at least one option: --org, --pat, --login, --logout, --tenant, --project, --team, --email, --border, --show, --reset, or --refresh-cache.");
+
+        When(x => !string.IsNullOrEmpty(x.Border), () =>
+        {
+            RuleFor(x => x.Border)
+                .Must(b => b.ToLowerInvariant() is "minimal" or "square" or "markdown")
+                .WithMessage("--border must be one of: minimal, square, markdown.");
+        });
 
         When(x => !string.IsNullOrEmpty(x.OrgUrl), () =>
         {

@@ -69,6 +69,7 @@ When you sign in (`--login`) or provide a `--pat`, the CLI automatically fetches
 | `--project` | `-P` | Default project (used when `--project` is omitted from other commands) |
 | `--team` | `-T` | Default team for resolving the active iteration and area path (defaults to `{Project} Team`) |
 | `--email` | `-e` | Your email address, used to resolve `--assigned-to me`. Set manually if auto-detection fails |
+| `--border` | | Table border style for list output: `minimal` (default), `square`, or `markdown` |
 | `--show` | | Display the current configuration (auth mode and masked secret) |
 | `--reset` | | Remove all local configuration and cache, and sign out |
 | `--refresh-cache` | | Force re-fetch of iteration and area path on next `create` |

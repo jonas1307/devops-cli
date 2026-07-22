@@ -32,7 +32,7 @@ internal static class RunsAction
                 var created = r.CreatedDate.HasValue ? r.CreatedDate.Value.ToString("yyyy/MM/dd HH:mm") : "-";
                 table.AddRow(
                     Markup.Escape(r.Id.ToString()),
-                    Markup.Escape(r.Name ?? "-"),
+                    Markup.Escape(ActionHelpers.Truncate(r.Name ?? "-", 30)),
                     ActionHelpers.ColorState(r.State),
                     ActionHelpers.ColorResult(r.Result),
                     Markup.Escape(created));

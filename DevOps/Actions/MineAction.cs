@@ -28,7 +28,7 @@ internal static class MineAction
                     Markup.Escape(item.Id.ToString()),
                     Markup.Escape(item.Fields.WorkItemType ?? "-"),
                     ActionHelpers.ColorState(item.Fields.State),
-                    Markup.Escape(item.Fields.Title ?? "-"));
+                    Markup.Escape(ActionHelpers.Truncate(item.Fields.Title ?? "-", 70)));
             }
 
             AnsiConsole.Write(table);

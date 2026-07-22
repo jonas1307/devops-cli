@@ -58,6 +58,19 @@ internal static class ActionHelpers
     internal static void WriteMuted(string text) => AnsiConsole.MarkupLine($"[grey]{Markup.Escape(text)}[/]");
 
     /// <summary>
+    /// Describes how many items are shown, making truncation explicit when the query
+    /// matched more than were fetched.
+    /// </summary>
+    internal static string DescribeCount(int shown, int totalMatched, string noun)
+    {
+        var plural = shown == 1 ? noun : $"{noun}s";
+
+        return totalMatched > shown
+            ? $"Showing {shown} of {totalMatched} {noun}s - use --top to fetch more."
+            : $"Total: {shown} {plural}";
+    }
+
+    /// <summary>
     /// Resolves the browser URL for a pull request. The Azure DevOps PR payload
     /// often omits _links.web, so we fall back to building it from org/project/repo.
     /// </summary>

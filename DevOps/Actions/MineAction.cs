@@ -12,7 +12,7 @@ internal static class MineAction
         try
         {
             var project = ConfigService.ResolveProject(opts.Project);
-            var items = await HttpService.ListWorkItems(project, opts.State, opts.Type, "me", opts.Query, opts.ParentId, ct);
+            var (items, totalMatched) = await HttpService.ListWorkItems(project, opts.State, opts.Type, "me", opts.Query, opts.ParentId, opts.Top, ct);
 
             if (items.Count == 0)
             {
@@ -32,7 +32,7 @@ internal static class MineAction
             }
 
             AnsiConsole.Write(table);
-            ActionHelpers.WriteMuted($"Total: {items.Count} work item(s)");
+            ActionHelpers.WriteMuted(ActionHelpers.DescribeCount(items.Count, totalMatched, "work item"));
             return 0;
         }
         catch (Exception ex)

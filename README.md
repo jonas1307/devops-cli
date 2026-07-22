@@ -111,6 +111,7 @@ devops mine -p 1234            # only children of work item 1234
 | `--type` | `-t` | Filter by work item type |
 | `--query` | `-q` | Additional WIQL WHERE clause |
 | `--parent` | `-p` | Filter by parent work item ID |
+| `--top` | `-n` | Maximum number of work items to fetch (default: 50) |
 
 ---
 
@@ -122,8 +123,11 @@ devops list -s Active
 devops list -t Bug -a me
 devops list -P MyProject -s "In Progress" -t Task
 devops list -p 1234            # only children of work item 1234
+devops list -n 200             # fetch up to 200 items instead of the default 50
 devops list -q "[System.IterationPath] UNDER 'MyProject\\Sprint 1'"
 ```
+
+Queries fetch up to `--top` items (default 50). When more match than were fetched, the footer says so — for example `Showing 50 of 312 work items - use --top to fetch more.` Items are retrieved in batches of 200 behind the scenes, which is the maximum the Azure DevOps batch endpoint accepts.
 
 | Option | Alias | Description |
 |---|---|---|
@@ -133,6 +137,7 @@ devops list -q "[System.IterationPath] UNDER 'MyProject\\Sprint 1'"
 | `--assigned-to` | `-a` | Filter by assignee. Use `me` for the current user |
 | `--query` | `-q` | WIQL WHERE clause for advanced filtering |
 | `--parent` | `-p` | Filter by parent work item ID |
+| `--top` | `-n` | Maximum number of work items to fetch (default: 50) |
 
 ---
 
@@ -232,6 +237,7 @@ devops normalize -a any               # all tasks, regardless of assignee
 | `--assigned-to` | `-a` | Filter by assignee. Use `me` (default) or `any` for all |
 | `--parent` | `-p` | Restrict to children of a specific parent ID |
 | `--dry-run` | `-n` | Preview changes without applying them |
+| `--top` | | Maximum number of tasks to fetch (default: 200) |
 
 ---
 

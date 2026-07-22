@@ -10,6 +10,14 @@ public static class HttpService
 {
     private const string API_VERSION = "7.1";
 
+    // The work item batch endpoint accepts at most 200 ids per request.
+    private const int WorkItemBatchSize = 200;
+
+    private const string WorkItemFields =
+        "System.Id,System.Title,System.State,System.WorkItemType,System.AssignedTo," +
+        "System.Description,Microsoft.VSTS.Common.Priority,System.CreatedDate," +
+        "System.ChangedDate,System.TeamProject,System.Parent";
+
     private static async Task<RestClient> CreateClientAsync(CancellationToken cancellationToken)
     {
         var config = ConfigService.LoadConfig();
@@ -48,7 +56,11 @@ public static class HttpService
         return JsonConvert.DeserializeObject<WorkItemResponse>(response.Content);
     }
 
-    public static async Task<List<WorkItemResponse>> ListWorkItems(string project, string state, string type, string assignedTo, string customQuery, int? parentId = null, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Runs a WIQL query and fetches the matching work items, returning the requested
+    /// page along with how many items matched in total (so callers can report truncation).
+    /// </summary>
+    public static async Task<(List<WorkItemResponse> Items, int TotalMatched)> ListWorkItems(string project, string state, string type, string assignedTo, string customQuery, int? parentId = null, int top = 50, CancellationToken cancellationToken = default)
     {
         using var client = await CreateClientAsync(cancellationToken);
 
@@ -89,23 +101,36 @@ public static class HttpService
         var refs = JsonConvert.DeserializeObject<WiqlResponse>(wiqlResponse.Content).WorkItems;
 
         if (refs is null || refs.Count == 0)
-            return [];
+            return ([], 0);
 
-        var ids = string.Join(",", refs.Take(200).Select(r => r.Id));
-        var batchRequest = new RestRequest($"{project}/_apis/wit/workitems", Method.Get);
-        batchRequest.AddQueryParameter("api-version", API_VERSION);
-        batchRequest.AddQueryParameter("ids", ids);
-        batchRequest.AddQueryParameter("fields",
-            "System.Id,System.Title,System.State,System.WorkItemType,System.AssignedTo," +
-            "System.Description,Microsoft.VSTS.Common.Priority,System.CreatedDate," +
-            "System.ChangedDate,System.TeamProject,System.Parent");
+        var totalMatched = refs.Count;
+        var selectedIds = refs.Take(Math.Max(top, 1)).Select(r => r.Id).ToList();
 
-        var batchResponse = await client.ExecuteAsync(batchRequest, cancellationToken);
+        var fetched = new List<WorkItemResponse>(selectedIds.Count);
 
-        if (!batchResponse.IsSuccessStatusCode)
-            throw new Exception($"Failed to fetch work item details. Status: {batchResponse.StatusCode}. {batchResponse.Content}");
+        foreach (var chunk in selectedIds.Chunk(WorkItemBatchSize))
+        {
+            var batchRequest = new RestRequest($"{project}/_apis/wit/workitems", Method.Get);
+            batchRequest.AddQueryParameter("api-version", API_VERSION);
+            batchRequest.AddQueryParameter("ids", string.Join(",", chunk));
+            batchRequest.AddQueryParameter("fields", WorkItemFields);
 
-        return JsonConvert.DeserializeObject<WorkItemBatchResponse>(batchResponse.Content).Value;
+            var batchResponse = await client.ExecuteAsync(batchRequest, cancellationToken);
+
+            if (!batchResponse.IsSuccessStatusCode)
+                throw new Exception($"Failed to fetch work item details. Status: {batchResponse.StatusCode}. {batchResponse.Content}");
+
+            var page = JsonConvert.DeserializeObject<WorkItemBatchResponse>(batchResponse.Content)?.Value;
+            if (page is not null)
+                fetched.AddRange(page);
+        }
+
+        // Batch responses are not guaranteed to preserve the order of the requested ids,
+        // so restore the ordering produced by the query.
+        var byId = fetched.GroupBy(i => i.Id).ToDictionary(g => g.Key, g => g.First());
+        var items = selectedIds.Where(byId.ContainsKey).Select(id => byId[id]).ToList();
+
+        return (items, totalMatched);
     }
 
     public static async Task<string> GetDefaultAreaPath(string project, string team, CancellationToken cancellationToken = default)

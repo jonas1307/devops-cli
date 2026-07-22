@@ -19,4 +19,7 @@ public class NormalizeOptions
 
     [Option('n', "dry-run", Required = false, HelpText = "Preview changes without applying them.")]
     public bool DryRun { get; set; }
+
+    [Option("top", Required = false, Default = 200, HelpText = "Maximum number of tasks to fetch (default: 200).")]
+    public int Top { get; set; }
 }

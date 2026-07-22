@@ -51,8 +51,11 @@ internal static class ActionHelpers
         _ => Markup.Escape(string.IsNullOrEmpty(result) ? "-" : result)
     };
 
-    /// <summary>Prints a dim footer line (e.g., totals) below a table.</summary>
-    internal static void WriteFooter(string text) => AnsiConsole.MarkupLine($"[dim]{Markup.Escape(text)}[/]");
+    /// <summary>
+    /// Prints a muted line for context around a table (totals and the like), so the
+    /// table itself stands out as the actual result.
+    /// </summary>
+    internal static void WriteMuted(string text) => AnsiConsole.MarkupLine($"[grey]{Markup.Escape(text)}[/]");
 
     /// <summary>
     /// Resolves the browser URL for a pull request. The Azure DevOps PR payload

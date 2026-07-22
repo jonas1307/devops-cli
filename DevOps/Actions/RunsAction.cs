@@ -39,7 +39,7 @@ internal static class RunsAction
             }
 
             AnsiConsole.Write(table);
-            ActionHelpers.WriteFooter($"Showing {recent.Count} of {runs.Count} run(s) for pipeline {opts.PipelineId}.");
+            ActionHelpers.WriteMuted($"Showing {recent.Count} of {runs.Count} run(s) for pipeline {opts.PipelineId}.");
             return 0;
         }
         catch (Exception ex)

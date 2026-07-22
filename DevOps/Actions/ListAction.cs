@@ -12,7 +12,7 @@ internal static class ListAction
         try
         {
             var project = ConfigService.ResolveProject(opts.Project);
-            var items = await HttpService.ListWorkItems(project, opts.State, opts.Type, opts.AssignedTo, opts.Query, opts.ParentId, ct);
+            var (items, totalMatched) = await HttpService.ListWorkItems(project, opts.State, opts.Type, opts.AssignedTo, opts.Query, opts.ParentId, opts.Top, ct);
 
             if (items.Count == 0)
             {
@@ -33,7 +33,7 @@ internal static class ListAction
             }
 
             AnsiConsole.Write(table);
-            ActionHelpers.WriteMuted($"Total: {items.Count} work item(s)");
+            ActionHelpers.WriteMuted(ActionHelpers.DescribeCount(items.Count, totalMatched, "work item"));
             return 0;
         }
         catch (Exception ex)

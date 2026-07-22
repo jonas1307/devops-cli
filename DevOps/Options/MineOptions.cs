@@ -19,4 +19,7 @@ public class MineOptions
 
     [Option('p', "parent", Required = false, HelpText = "Filter by parent work item ID.")]
     public int? ParentId { get; set; }
+
+    [Option('n', "top", Required = false, Default = 50, HelpText = "Maximum number of work items to fetch (default: 50).")]
+    public int Top { get; set; }
 }

@@ -17,7 +17,10 @@ internal static class NormalizeAction
         {
             var project = ConfigService.ResolveProject(opts.Project);
             var assignedTo = opts.AssignedTo.Equals("any", StringComparison.OrdinalIgnoreCase) ? null : opts.AssignedTo;
-            var items = await HttpService.ListWorkItems(project, opts.State, "Task", assignedTo, null, opts.ParentId, ct);
+            var (items, totalMatched) = await HttpService.ListWorkItems(project, opts.State, "Task", assignedTo, null, opts.ParentId, opts.Top, ct);
+
+            if (totalMatched > items.Count)
+                ConsoleHelper.WriteError($"Warning: {totalMatched} tasks matched but only {items.Count} were fetched. Use --top to cover them all.");
 
             var toNormalize = items
                 .Where(i => Unnormalized.IsMatch(i.Fields.Title ?? "") && !AlreadyNormalized.IsMatch(i.Fields.Title ?? ""))

@@ -25,4 +25,7 @@ public class ListOptions
 
     [Option("ids", Required = false, HelpText = "Show work item IDs in output.")]
     public bool ShowIds { get; set; }
+
+    [Option('n', "top", Required = false, Default = 50, HelpText = "Maximum number of work items to fetch (default: 50).")]
+    public int Top { get; set; }
 }

@@ -340,6 +340,76 @@ On success it prints the new run ID, its state, and a link to follow it in the b
 
 ---
 
+## Pull Request Commands
+
+Pull requests belong to a **repository**, specified with `--repo` (required for `pr-create`, optional filter for `pr-list`). `pr-get` and `pr-open` work by PR ID at the organization level, so they need neither project nor repo.
+
+### `pr-list` — List pull requests
+
+```powershell
+devops pr-list
+devops pr-list -r MyRepo -s active
+devops pr-list -r MyRepo -t main
+devops pr-list -s all -n 50
+```
+
+| Option | Alias | Description |
+|---|---|---|
+| `--project` | `-p` | Project name (uses default if configured) |
+| `--repo` | `-r` | Repository name. If omitted, lists across all repos in the project |
+| `--status` | `-s` | `active` (default), `completed`, `abandoned`, or `all` |
+| `--target` | `-t` | Filter by target branch (e.g., `main`) |
+| `--top` | `-n` | Maximum number of PRs to show (default: 25) |
+
+---
+
+### `pr-get` — Show pull request details
+
+```powershell
+devops pr-get -i 123
+```
+
+Shows status, source/target branches, author, reviewers with their votes, the web URL, and the description.
+
+| Option | Alias | Description |
+|---|---|---|
+| `--id` | `-i` | Pull request ID (required) |
+
+---
+
+### `pr-create` — Create a pull request
+
+```powershell
+devops pr-create -r MyRepo -s feature/login -t main --title "Add login"
+devops pr-create -r MyRepo -s feature/x -t main --title "WIP" -d "Details..." --draft
+```
+
+Branches accept either the short name (`main`) or the full ref (`refs/heads/main`).
+
+| Option | Alias | Description |
+|---|---|---|
+| `--repo` | `-r` | Repository name (required) |
+| `--source` | `-s` | Source branch (required) |
+| `--target` | `-t` | Target branch (required) |
+| `--title` | | Pull request title (required) |
+| `--description` | `-d` | Pull request description |
+| `--draft` | | Create as a draft |
+| `--project` | `-p` | Project name (uses default if configured) |
+
+---
+
+### `pr-open` — Open a pull request in the browser
+
+```powershell
+devops pr-open -i 123
+```
+
+| Option | Alias | Description |
+|---|---|---|
+| `--id` | `-i` | Pull request ID (required) |
+
+---
+
 ## Authentication
 
 The CLI supports two authentication methods. Your choice is stored in `config.json` as the active auth mode and switching is just a matter of re-running `config`.

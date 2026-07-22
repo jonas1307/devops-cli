@@ -46,3 +46,21 @@ public class PipelineRepositoryResource
     [JsonProperty("refName")]
     public string RefName { get; set; }
 }
+
+public class PullRequestCreateRequest
+{
+    [JsonProperty("sourceRefName")]
+    public string SourceRefName { get; set; }
+
+    [JsonProperty("targetRefName")]
+    public string TargetRefName { get; set; }
+
+    [JsonProperty("title")]
+    public string Title { get; set; }
+
+    [JsonProperty("description")]
+    public string Description { get; set; }
+
+    [JsonProperty("isDraft")]
+    public bool IsDraft { get; set; }
+}

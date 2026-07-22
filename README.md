@@ -27,7 +27,7 @@ The command is invoked as `devops`.
 ### Build from source
 
 ```powershell
-dotnet publish DevOps.Console/DevOps.Console.csproj -c Release -o ./publish
+dotnet publish DevOps/DevOps.csproj -c Release -o ./publish
 ```
 
 Add the `publish` directory to your `PATH`, or copy the executable to a directory already on your `PATH`.

@@ -5,6 +5,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
+    <AssemblyName>DevOps</AssemblyName>
+    <RootNamespace>DevOps</RootNamespace>
 
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>devops</ToolCommandName>

@@ -8,6 +8,19 @@ internal static class ActionHelpers
         return value.Length > max ? value[..(max - 3)] + "..." : value;
     }
 
+    internal static string ShortBranch(string refName) =>
+        string.IsNullOrEmpty(refName) ? "-" : refName.Replace("refs/heads/", "");
+
+    internal static string VoteText(int vote) => vote switch
+    {
+        10 => "approved",
+        5 => "approved w/ suggestions",
+        0 => "no vote",
+        -5 => "waiting",
+        -10 => "rejected",
+        _ => vote.ToString()
+    };
+
     internal static string ParentTypeAbbreviation(string workItemType) =>
         workItemType == "Product Backlog Item"
             ? "PBI"

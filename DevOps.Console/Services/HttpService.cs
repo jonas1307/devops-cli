@@ -206,6 +206,70 @@ public static class HttpService
         return JsonConvert.DeserializeObject<PipelineRunResponse>(response.Content);
     }
 
+    private static string NormalizeBranch(string branch) =>
+        branch.StartsWith("refs/", StringComparison.OrdinalIgnoreCase) ? branch : $"refs/heads/{branch}";
+
+    public static async Task<List<PullRequestResponse>> ListPullRequests(string project, string repo, string status, string targetBranch, int top, CancellationToken cancellationToken = default)
+    {
+        using var client = await CreateClientAsync(cancellationToken);
+        var path = string.IsNullOrEmpty(repo)
+            ? $"{project}/_apis/git/pullrequests"
+            : $"{project}/_apis/git/repositories/{Uri.EscapeDataString(repo)}/pullrequests";
+
+        var request = new RestRequest(path, Method.Get);
+        request.AddQueryParameter("api-version", API_VERSION);
+        request.AddQueryParameter("$top", top.ToString());
+        if (!string.IsNullOrEmpty(status))
+            request.AddQueryParameter("searchCriteria.status", status);
+        if (!string.IsNullOrEmpty(targetBranch))
+            request.AddQueryParameter("searchCriteria.targetRefName", NormalizeBranch(targetBranch));
+
+        var response = await client.ExecuteAsync(request, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+            throw new Exception($"Failed to list pull requests. Status: {response.StatusCode}. {response.Content}");
+
+        return JsonConvert.DeserializeObject<PullRequestListResponse>(response.Content).Value ?? [];
+    }
+
+    public static async Task<PullRequestResponse> GetPullRequest(int pullRequestId, CancellationToken cancellationToken = default)
+    {
+        using var client = await CreateClientAsync(cancellationToken);
+        var request = new RestRequest($"_apis/git/pullrequests/{pullRequestId}", Method.Get);
+        request.AddQueryParameter("api-version", API_VERSION);
+
+        var response = await client.ExecuteAsync(request, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+            throw new Exception($"Failed to get pull request {pullRequestId}. Status: {response.StatusCode}. {response.Content}");
+
+        return JsonConvert.DeserializeObject<PullRequestResponse>(response.Content);
+    }
+
+    public static async Task<PullRequestResponse> CreatePullRequest(string project, string repo, string sourceBranch, string targetBranch, string title, string description, bool isDraft, CancellationToken cancellationToken = default)
+    {
+        using var client = await CreateClientAsync(cancellationToken);
+        var request = new RestRequest($"{project}/_apis/git/repositories/{Uri.EscapeDataString(repo)}/pullrequests", Method.Post);
+        request.AddQueryParameter("api-version", API_VERSION);
+
+        var body = new PullRequestCreateRequest
+        {
+            SourceRefName = NormalizeBranch(sourceBranch),
+            TargetRefName = NormalizeBranch(targetBranch),
+            Title = title,
+            Description = description,
+            IsDraft = isDraft
+        };
+        request.AddStringBody(JsonConvert.SerializeObject(body), DataFormat.Json);
+
+        var response = await client.ExecuteAsync(request, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+            throw new Exception($"Failed to create pull request. Status: {response.StatusCode}. {response.Content}");
+
+        return JsonConvert.DeserializeObject<PullRequestResponse>(response.Content);
+    }
+
     public static async Task<AuthenticatedUser> GetCurrentUser(CancellationToken cancellationToken = default)
     {
         using var client = await CreateClientAsync(cancellationToken);

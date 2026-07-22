@@ -176,6 +176,81 @@ public class PipelineRunLink
     public string Href { get; set; }
 }
 
+public class PullRequestListResponse
+{
+    [JsonProperty("value")]
+    public List<PullRequestResponse> Value { get; set; }
+}
+
+public class PullRequestResponse
+{
+    [JsonProperty("pullRequestId")]
+    public int PullRequestId { get; set; }
+
+    [JsonProperty("title")]
+    public string Title { get; set; }
+
+    [JsonProperty("status")]
+    public string Status { get; set; }
+
+    [JsonProperty("isDraft")]
+    public bool IsDraft { get; set; }
+
+    [JsonProperty("sourceRefName")]
+    public string SourceRefName { get; set; }
+
+    [JsonProperty("targetRefName")]
+    public string TargetRefName { get; set; }
+
+    [JsonProperty("description")]
+    public string Description { get; set; }
+
+    [JsonProperty("creationDate")]
+    public DateTime? CreationDate { get; set; }
+
+    [JsonProperty("createdBy")]
+    public AssignedTo CreatedBy { get; set; }
+
+    [JsonProperty("repository")]
+    public PullRequestRepository Repository { get; set; }
+
+    [JsonProperty("reviewers")]
+    public List<PullRequestReviewer> Reviewers { get; set; }
+
+    [JsonProperty("_links")]
+    public PullRequestLinks Links { get; set; }
+}
+
+public class PullRequestRepository
+{
+    [JsonProperty("name")]
+    public string Name { get; set; }
+}
+
+public class PullRequestReviewer
+{
+    [JsonProperty("displayName")]
+    public string DisplayName { get; set; }
+
+    [JsonProperty("vote")]
+    public int Vote { get; set; }
+
+    [JsonProperty("isRequired")]
+    public bool IsRequired { get; set; }
+}
+
+public class PullRequestLinks
+{
+    [JsonProperty("web")]
+    public PullRequestWebLink Web { get; set; }
+}
+
+public class PullRequestWebLink
+{
+    [JsonProperty("href")]
+    public string Href { get; set; }
+}
+
 public class TeamFieldValuesResponse
 {
     [JsonProperty("defaultValue")]

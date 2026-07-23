@@ -78,6 +78,8 @@ When you sign in (`--login`) or provide a `--pat`, the CLI automatically fetches
 
 ## Work Item Commands
 
+> **Note on `-p`:** most commands use `-p` as the short alias for `--project`. On `list`, `mine` and `normalize`, `-p` is `--parent` instead (project uses `-P` there), so the more common parent filter gets the short flag. When in doubt, use the long form (`--project` / `--parent`).
+
 ### `get` — Get work item details
 
 ```powershell
@@ -453,6 +455,7 @@ Go to **User Settings → Personal Access Tokens → New Token** and grant the f
 | Scope | Permission | Used by |
 |---|---|---|
 | Work Items | Read & Write | All work item commands |
-| Build | Read | `pipelines` |
+| Code | Read & Write | Pull request commands. `Read` covers `pr-list`/`pr-get`/`pr-open`; `pr-create` needs `Read & Write` |
+| Build | Read & Execute | `pipelines` and `runs` need `Read`; queueing with `run` needs `Execute` |
 
 The PAT is stored encrypted (DPAPI) on Windows and in an owner-only file (`600`) on Linux/macOS.

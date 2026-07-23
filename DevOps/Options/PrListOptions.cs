@@ -19,4 +19,7 @@ public class PrListOptions
 
     [Option('n', "top", Required = false, Default = 25, HelpText = "Maximum number of pull requests to show (default: 25).")]
     public int Top { get; set; }
+
+    [Option('m', "mine", Required = false, HelpText = "Only pull requests created by me.")]
+    public bool Mine { get; set; }
 }

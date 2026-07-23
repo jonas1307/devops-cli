@@ -87,6 +87,7 @@ internal static class ConfigAction
         // PAT or plain settings (org/project/team/email) flow.
         string patUserDisplayName = null;
         string patUserEmail = null;
+        string patUserId = null;
 
         if (!string.IsNullOrEmpty(opts.Pat))
         {
@@ -97,6 +98,7 @@ internal static class ConfigAction
                 var user = await HttpService.GetCurrentUser(ct);
                 patUserDisplayName = user.DisplayName;
                 patUserEmail = user.Properties?.Account?.Value;
+                patUserId = user.Id;
 
                 if (patUserEmail == null)
                     ConsoleHelper.WriteError("Warning: could not detect your email automatically. Use 'config --email <your@email.com>' so '--assigned-to me' works.");
@@ -107,7 +109,7 @@ internal static class ConfigAction
             }
         }
 
-        ConfigService.SaveConfig(opts, patUserDisplayName, patUserEmail);
+        ConfigService.SaveConfig(opts, patUserDisplayName, patUserEmail, userId: patUserId);
 
         if (patUserDisplayName != null && patUserEmail != null)
             ConsoleHelper.WriteSuccess($"Configuration saved. Logged in as: {patUserDisplayName} ({patUserEmail})");
@@ -128,11 +130,13 @@ internal static class ConfigAction
 
             string userDisplayName = null;
             string userEmail = null;
+            string userId = null;
             try
             {
                 var user = await HttpService.GetCurrentUser(ct);
                 userDisplayName = user.DisplayName;
                 userEmail = user.Properties?.Account?.Value;
+                userId = user.Id;
             }
             catch (Exception ex)
             {
@@ -140,7 +144,7 @@ internal static class ConfigAction
             }
 
             userEmail ??= result.Account?.Username;
-            ConfigService.SaveConfig(opts, userDisplayName, userEmail, AuthModes.Entra);
+            ConfigService.SaveConfig(opts, userDisplayName, userEmail, AuthModes.Entra, userId);
 
             ConsoleHelper.WriteSuccess($"Signed in as {userDisplayName ?? result.Account?.Username} ({userEmail}).");
             return 0;

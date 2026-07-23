@@ -154,6 +154,16 @@ internal static class ActionHelpers
     internal static string ShortBranch(string refName) =>
         string.IsNullOrEmpty(refName) ? "-" : refName.Replace("refs/heads/", "");
 
+    internal static int VoteValue(string vote) => vote?.ToLowerInvariant() switch
+    {
+        "approve" => 10,
+        "approve-suggestions" => 5,
+        "reset" or "none" => 0,
+        "wait" => -5,
+        "reject" => -10,
+        _ => throw new ArgumentException($"Unknown vote '{vote}'. Valid values: approve, approve-suggestions, reject, wait, reset.")
+    };
+
     internal static string VoteText(int vote) => vote switch
     {
         10 => "approved",

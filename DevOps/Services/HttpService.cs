@@ -21,24 +21,27 @@ public static class HttpService
     private static async Task<RestClient> CreateClientAsync(CancellationToken cancellationToken)
     {
         var config = ConfigService.LoadConfig();
+        return new RestClient(new RestClientOptions(config.OrgUrl) { Authenticator = await ResolveAuthenticatorAsync(config, cancellationToken) });
+    }
 
-        IAuthenticator authenticator;
+    private static async Task<RestClient> CreateClientAsync(string baseUrl, CancellationToken cancellationToken)
+    {
+        var config = ConfigService.LoadConfig();
+        return new RestClient(new RestClientOptions(baseUrl) { Authenticator = await ResolveAuthenticatorAsync(config, cancellationToken) });
+    }
+
+    private static async Task<IAuthenticator> ResolveAuthenticatorAsync(Config config, CancellationToken cancellationToken)
+    {
         if (config.AuthMode == AuthModes.Entra)
         {
             var token = await AuthService.GetAccessTokenAsync(config.TenantId, cancellationToken);
-            authenticator = new JwtAuthenticator(token);
-        }
-        else if (!string.IsNullOrEmpty(config.Pat))
-        {
-            authenticator = new HttpBasicAuthenticator(string.Empty, config.Pat);
-        }
-        else
-        {
-            throw new InvalidOperationException("No authentication configured. Run 'config --pat <token>' or 'config --login'.");
+            return new JwtAuthenticator(token);
         }
 
-        var options = new RestClientOptions(config.OrgUrl) { Authenticator = authenticator };
-        return new RestClient(options);
+        if (!string.IsNullOrEmpty(config.Pat))
+            return new HttpBasicAuthenticator(string.Empty, config.Pat);
+
+        throw new InvalidOperationException("No authentication configured. Run 'config --pat <token>' or 'config --login'.");
     }
 
     public static async Task<WorkItemResponse> GetWorkItem(int id, string project, CancellationToken cancellationToken = default)
@@ -273,7 +276,7 @@ public static class HttpService
         return JsonConvert.DeserializeObject<PullRequestResponse>(response.Content);
     }
 
-    public static async Task<PullRequestResponse> CreatePullRequest(string project, string repo, string sourceBranch, string targetBranch, string title, string description, bool isDraft, CancellationToken cancellationToken = default)
+    public static async Task<PullRequestResponse> CreatePullRequest(string project, string repo, string sourceBranch, string targetBranch, string title, string description, bool isDraft, List<string> reviewerIds = null, CancellationToken cancellationToken = default)
     {
         using var client = await CreateClientAsync(cancellationToken);
         var request = new RestRequest($"{project}/_apis/git/repositories/{Uri.EscapeDataString(repo)}/pullrequests", Method.Post);
@@ -285,7 +288,8 @@ public static class HttpService
             TargetRefName = NormalizeBranch(targetBranch),
             Title = title,
             Description = description,
-            IsDraft = isDraft
+            IsDraft = isDraft,
+            Reviewers = reviewerIds?.Select(id => new PullRequestReviewerRef { Id = id }).ToList()
         };
         request.AddStringBody(JsonConvert.SerializeObject(body), DataFormat.Json);
 
@@ -295,6 +299,83 @@ public static class HttpService
             throw new Exception($"Failed to create pull request. Status: {response.StatusCode}. {response.Content}");
 
         return JsonConvert.DeserializeObject<PullRequestResponse>(response.Content);
+    }
+
+    /// <summary>
+    /// Resolves reviewer identifiers to their IDs. Accepts "me" (current user), a raw GUID,
+    /// or an email/name resolved through the Identities API.
+    /// </summary>
+    public static async Task<List<string>> ResolveReviewerIds(IEnumerable<string> reviewers, CancellationToken cancellationToken = default)
+    {
+        var config = ConfigService.LoadConfig();
+        var vsspsBase = config.OrgUrl.Replace("://dev.azure.com", "://vssps.dev.azure.com", StringComparison.OrdinalIgnoreCase);
+
+        var ids = new List<string>();
+        RestClient identityClient = null;
+        try
+        {
+            foreach (var raw in reviewers)
+            {
+                var value = raw?.Trim();
+                if (string.IsNullOrEmpty(value))
+                    continue;
+
+                if (value.Equals("me", StringComparison.OrdinalIgnoreCase))
+                {
+                    ids.Add(ConfigService.ResolveUserId());
+                    continue;
+                }
+
+                if (Guid.TryParse(value, out _))
+                {
+                    ids.Add(value);
+                    continue;
+                }
+
+                identityClient ??= await CreateClientAsync(vsspsBase, cancellationToken);
+                var request = new RestRequest("_apis/identities", Method.Get);
+                request.AddQueryParameter("api-version", API_VERSION);
+                request.AddQueryParameter("searchFilter", "General");
+                request.AddQueryParameter("filterValue", value);
+
+                var response = await identityClient.ExecuteAsync(request, cancellationToken);
+                if (!response.IsSuccessStatusCode)
+                    throw new Exception($"Failed to resolve reviewer '{value}'. Status: {response.StatusCode}. {response.Content}");
+
+                var found = JsonConvert.DeserializeObject<IdentityListResponse>(response.Content)?.Value?.FirstOrDefault();
+                if (string.IsNullOrEmpty(found?.Id))
+                    throw new Exception($"Reviewer '{value}' not found.");
+
+                ids.Add(found.Id);
+            }
+        }
+        finally
+        {
+            identityClient?.Dispose();
+        }
+
+        return ids;
+    }
+
+    /// <summary>Links work items to a pull request via an ArtifactLink relation on each work item.</summary>
+    public static async Task LinkWorkItemsToPullRequest(string projectId, string repositoryId, int pullRequestId, IEnumerable<int> workItemIds, string project, CancellationToken cancellationToken = default)
+    {
+        var artifactUri = $"vstfs:///Git/PullRequestId/{projectId}%2F{repositoryId}%2F{pullRequestId}";
+
+        foreach (var workItemId in workItemIds)
+        {
+            var operations = new List<JsonPatchOperation>
+            {
+                new()
+                {
+                    Op = "add",
+                    Path = "/relations/-",
+                    Value = new { rel = "ArtifactLink", url = artifactUri, attributes = new { name = "Pull Request" } }
+                }
+            };
+
+            await UpdateWorkItem(workItemId, project, operations, cancellationToken);
+        }
     }
 
     /// <summary>Casts the current user's vote on a pull request (self-adds as a reviewer if needed).</summary>

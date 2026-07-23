@@ -416,19 +416,26 @@ Shows status, source/target branches, author, reviewers with their votes, the we
 
 ```powershell
 devops pr-create -r MyRepo -s feature/login -t main --title "Add login"
-devops pr-create -r MyRepo -s feature/x -t main --title "WIP" -d "Details..." --draft
+devops pr-create -r MyRepo -t main --title "Add login"                       # source = current git branch
+devops pr-create -r MyRepo -t main --title "WIP" -d "Details..." --draft
+devops pr-create -r MyRepo -t main --title "Add login" --reviewers me,jane@contoso.com
+devops pr-create -r MyRepo -t main --title "Add login" -w 1234,1235
 ```
 
-Branches accept either the short name (`main`) or the full ref (`refs/heads/main`).
+Branches accept either the short name (`main`) or the full ref (`refs/heads/main`). When `--source` is omitted, the current git branch is detected automatically from `.git/HEAD`.
+
+`--reviewers` accepts `me` (you), a reviewer GUID, or an email / display name (resolved through the Identities API). `--work-item` links existing work items to the new PR.
 
 | Option | Alias | Description |
 |---|---|---|
 | `--repo` | `-r` | Repository name (required) |
-| `--source` | `-s` | Source branch (required) |
+| `--source` | `-s` | Source branch (defaults to the current git branch) |
 | `--target` | `-t` | Target branch (required) |
 | `--title` | | Pull request title (required) |
 | `--description` | `-d` | Pull request description |
 | `--draft` | | Create as a draft |
+| `--reviewers` | | Reviewers to add: `me`, a GUID, or email/display name (comma-separated) |
+| `--work-item` | `-w` | Work item IDs to link to the pull request (comma-separated) |
 | `--project` | `-p` | Project name (uses default if configured) |
 
 ---

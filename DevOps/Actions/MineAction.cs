@@ -14,6 +14,9 @@ internal static class MineAction
             var project = ConfigService.ResolveProject(opts.Project);
             var (items, totalMatched) = await HttpService.ListWorkItems(project, opts.State, opts.Type, "me", opts.Query, opts.ParentId, opts.Top, ct);
 
+            if (!string.IsNullOrEmpty(opts.Output))
+                return ActionHelpers.WriteWorkItemsOutput(items, opts.Output);
+
             if (items.Count == 0)
             {
                 Console.WriteLine("No work items assigned to you.");

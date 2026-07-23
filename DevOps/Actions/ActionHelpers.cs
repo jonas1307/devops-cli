@@ -1,11 +1,66 @@
 using DevOps.Responses;
 using DevOps.Services;
+using DevOps.Utils;
+using Newtonsoft.Json;
 using Spectre.Console;
 
 namespace DevOps.Actions;
 
 internal static class ActionHelpers
 {
+    /// <summary>
+    /// Writes work items as machine-readable JSON or CSV to stdout. Returns a non-zero
+    /// exit code (with an error) for an unknown format.
+    /// </summary>
+    internal static int WriteWorkItemsOutput(List<WorkItemResponse> items, string format)
+    {
+        switch (format?.ToLowerInvariant())
+        {
+            case "json":
+                var projected = items.Select(i => new
+                {
+                    id = i.Id,
+                    type = i.Fields.WorkItemType,
+                    title = i.Fields.Title,
+                    state = i.Fields.State,
+                    assignedTo = i.Fields.AssignedTo?.DisplayName,
+                    project = i.Fields.TeamProject,
+                    parentId = i.Fields.ParentId,
+                    priority = i.Fields.Priority,
+                    createdDate = i.Fields.CreatedDate,
+                    changedDate = i.Fields.ChangedDate
+                });
+                Console.WriteLine(JsonConvert.SerializeObject(projected, Formatting.Indented));
+                return 0;
+
+            case "csv":
+                Console.WriteLine("id,type,title,state,assigned_to,project,parent_id,priority,created,changed");
+                foreach (var i in items)
+                {
+                    var f = i.Fields;
+                    Console.WriteLine(string.Join(",",
+                        i.Id,
+                        Csv(f.WorkItemType), Csv(f.Title), Csv(f.State),
+                        Csv(f.AssignedTo?.DisplayName), Csv(f.TeamProject),
+                        f.ParentId?.ToString() ?? "", f.Priority?.ToString() ?? "",
+                        f.CreatedDate.ToString("yyyy-MM-dd"), f.ChangedDate.ToString("yyyy-MM-dd")));
+                }
+                return 0;
+
+            default:
+                ConsoleHelper.WriteError($"Unknown output format '{format}'. Use 'json' or 'csv'.");
+                return 1;
+        }
+    }
+
+    private static string Csv(string value)
+    {
+        if (string.IsNullOrEmpty(value)) return "";
+        return value.Contains(',') || value.Contains('"') || value.Contains('\n')
+            ? "\"" + value.Replace("\"", "\"\"") + "\""
+            : value;
+    }
+
     /// <summary>Creates a table with bold headers, sized to the terminal, using the configured border.</summary>
     internal static Table NewTable(params string[] columns)
     {

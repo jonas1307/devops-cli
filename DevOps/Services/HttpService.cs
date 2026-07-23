@@ -392,6 +392,28 @@ public static class HttpService
             throw new Exception($"Failed to vote on pull request {pullRequestId}. Status: {response.StatusCode}. {response.Content}");
     }
 
+    /// <summary>Adds a top-level comment thread to a pull request, returning the created thread id.</summary>
+    public static async Task<int> AddPullRequestComment(string project, string repo, int pullRequestId, string content, CancellationToken cancellationToken = default)
+    {
+        using var client = await CreateClientAsync(cancellationToken);
+        var request = new RestRequest($"{project}/_apis/git/repositories/{Uri.EscapeDataString(repo)}/pullrequests/{pullRequestId}/threads", Method.Post);
+        request.AddQueryParameter("api-version", API_VERSION);
+
+        var body = new
+        {
+            comments = new[] { new { parentCommentId = 0, content, commentType = 1 } },
+            status = 1
+        };
+        request.AddStringBody(JsonConvert.SerializeObject(body), DataFormat.Json);
+
+        var response = await client.ExecuteAsync(request, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+            throw new Exception($"Failed to comment on pull request {pullRequestId}. Status: {response.StatusCode}. {response.Content}");
+
+        return JsonConvert.DeserializeObject<PullRequestThreadResponse>(response.Content)?.Id ?? 0;
+    }
+
     /// <summary>Sets a pull request status (e.g. "abandoned"), returning the updated PR.</summary>
     public static async Task<PullRequestResponse> SetPullRequestStatus(string project, string repo, int pullRequestId, string status, CancellationToken cancellationToken = default)
     {

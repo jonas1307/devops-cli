@@ -22,4 +22,7 @@ public class MineOptions
 
     [Option('n', "top", Required = false, Default = 50, HelpText = "Maximum number of work items to fetch (default: 50).")]
     public int Top { get; set; }
+
+    [Option('o', "output", Required = false, HelpText = "Output format: 'json' or 'csv'. Defaults to a table.")]
+    public string Output { get; set; }
 }

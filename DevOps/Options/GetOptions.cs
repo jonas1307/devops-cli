@@ -10,4 +10,7 @@ public class GetOptions
 
     [Option('p', "project", Required = false, HelpText = "Project name. Uses default if configured.")]
     public string Project { get; set; }
+
+    [Option('o', "output", Required = false, HelpText = "Output format: 'json' or 'csv'. Defaults to a detailed view.")]
+    public string Output { get; set; }
 }

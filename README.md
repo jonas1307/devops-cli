@@ -91,6 +91,7 @@ devops get -i 1234 -p AnotherProject
 |---|---|---|
 | `--id` | `-i` | Work item ID (required) |
 | `--project` | `-p` | Project name (uses default if configured) |
+| `--output` | `-o` | Output format: `json` or `csv`. Defaults to a detailed view |
 
 ---
 
@@ -114,6 +115,7 @@ devops mine -p 1234            # only children of work item 1234
 | `--query` | `-q` | Additional WIQL WHERE clause |
 | `--parent` | `-p` | Filter by parent work item ID |
 | `--top` | `-n` | Maximum number of work items to fetch (default: 50) |
+| `--output` | `-o` | Output format: `json` or `csv`. Defaults to a table |
 
 ---
 
@@ -126,6 +128,7 @@ devops list -t Bug -a me
 devops list -P MyProject -s "In Progress" -t Task
 devops list -p 1234            # only children of work item 1234
 devops list -n 200             # fetch up to 200 items instead of the default 50
+devops list -s Active -o json  # machine-readable output for scripting
 devops list -q "[System.IterationPath] UNDER 'MyProject\\Sprint 1'"
 ```
 
@@ -140,6 +143,7 @@ Queries fetch up to `--top` items (default 50). When more match than were fetche
 | `--query` | `-q` | WIQL WHERE clause for advanced filtering |
 | `--parent` | `-p` | Filter by parent work item ID |
 | `--top` | `-n` | Maximum number of work items to fetch (default: 50) |
+| `--output` | `-o` | Output format: `json` or `csv`. Defaults to a table |
 
 ---
 

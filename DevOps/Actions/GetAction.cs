@@ -13,6 +13,9 @@ internal static class GetAction
             var project = ConfigService.ResolveProject(opts.Project);
             var item = await HttpService.GetWorkItem(opts.Id, project, ct);
 
+            if (!string.IsNullOrEmpty(opts.Output))
+                return ActionHelpers.WriteWorkItemsOutput([item], opts.Output);
+
             Console.WriteLine($"ID      : {item.Id}");
             Console.WriteLine($"Type    : {item.Fields.WorkItemType}");
             Console.WriteLine($"Title   : {item.Fields.Title}");

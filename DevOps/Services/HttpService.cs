@@ -341,4 +341,17 @@ public static class HttpService
 
         return JsonConvert.DeserializeObject<WorkItemResponse>(response.Content);
     }
+
+    /// <summary>Deletes a work item, moving it to the project recycle bin (recoverable).</summary>
+    public static async Task DeleteWorkItem(int id, string project, CancellationToken cancellationToken = default)
+    {
+        using var client = await CreateClientAsync(cancellationToken);
+        var request = new RestRequest($"{project}/_apis/wit/workitems/{id}", Method.Delete);
+        request.AddQueryParameter("api-version", API_VERSION);
+
+        var response = await client.ExecuteAsync(request, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+            throw new Exception($"Failed to delete work item {id}. Status: {response.StatusCode}. {response.Content}");
+    }
 }

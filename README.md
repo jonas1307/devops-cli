@@ -282,6 +282,24 @@ Output: `Work item #1234: To Do -> In Progress`
 
 ---
 
+### `delete` — Delete one or more work items
+
+Moves the work items to the project **recycle bin** (recoverable, not a permanent delete). Prompts for confirmation unless `--force`. Multiple IDs are processed in parallel.
+
+```powershell
+devops delete -i 1234
+devops delete -i 1234 5678 9012
+devops delete -i 1234 --force
+```
+
+| Option | Alias | Description |
+|---|---|---|
+| `--id` | `-i` | Work item ID(s) (required). Space-separated: `-i 1 2 3` |
+| `--project` | `-p` | Project name (uses default if configured) |
+| `--force` | | Skip the confirmation prompt |
+
+---
+
 ### `open` — Open a work item in the browser
 
 ```powershell

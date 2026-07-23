@@ -245,6 +245,12 @@ public class PullRequestProject
     public string Name { get; set; }
 }
 
+public class PullRequestThreadResponse
+{
+    [JsonProperty("id")]
+    public int Id { get; set; }
+}
+
 public class PullRequestReviewer
 {
     [JsonProperty("displayName")]

@@ -462,6 +462,21 @@ devops pr-vote -i 123 -v reset
 
 ---
 
+### `pr-comment` — Add a comment to a pull request
+
+Posts a top-level comment thread. Works by PR ID; the repository is resolved automatically.
+
+```powershell
+devops pr-comment -i 123 -m "Looks good, one nit on the naming."
+```
+
+| Option | Alias | Description |
+|---|---|---|
+| `--id` | `-i` | Pull request ID (required) |
+| `--message` | `-m` | Comment text (required) |
+
+---
+
 ### `pr-abandon` — Abandon a pull request
 
 ```powershell

@@ -217,8 +217,17 @@ public class PullRequestResponse
     [JsonProperty("reviewers")]
     public List<PullRequestReviewer> Reviewers { get; set; }
 
+    [JsonProperty("lastMergeSourceCommit")]
+    public GitCommitRef LastMergeSourceCommit { get; set; }
+
     [JsonProperty("_links")]
     public PullRequestLinks Links { get; set; }
+}
+
+public class GitCommitRef
+{
+    [JsonProperty("commitId")]
+    public string CommitId { get; set; }
 }
 
 public class PullRequestRepository
@@ -274,6 +283,9 @@ public class ConnectionDataResponse
 
 public class AuthenticatedUser
 {
+    [JsonProperty("id")]
+    public string Id { get; set; }
+
     [JsonProperty("providerDisplayName")]
     public string DisplayName { get; set; }
 

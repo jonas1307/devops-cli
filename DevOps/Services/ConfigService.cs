@@ -21,6 +21,7 @@ public record Config
     public string AuthMode { get; set; }
     public string DefaultProject { get; set; }
     public string DefaultTeam { get; set; }
+    public string UserId { get; set; }
     public string UserDisplayName { get; set; }
     public string UserEmail { get; set; }
     public bool PatEncrypted { get; set; }
@@ -56,7 +57,7 @@ public static class ConfigService
         return config;
     }
 
-    public static void SaveConfig(ConfigOptions opts, string userDisplayName = null, string userEmail = null, string authMode = null)
+    public static void SaveConfig(ConfigOptions opts, string userDisplayName = null, string userEmail = null, string authMode = null, string userId = null)
     {
         var configPath = GetConfigPath();
         var folderPath = Path.GetDirectoryName(configPath);
@@ -78,6 +79,7 @@ public static class ConfigService
             AuthMode = resolvedAuthMode,
             DefaultProject = opts.Project ?? existing.DefaultProject,
             DefaultTeam = opts.Team ?? existing.DefaultTeam,
+            UserId = userId ?? existing.UserId,
             UserDisplayName = userDisplayName ?? existing.UserDisplayName,
             UserEmail = opts.Email ?? userEmail ?? existing.UserEmail,
             TableBorder = opts.Border ?? existing.TableBorder
@@ -117,6 +119,15 @@ public static class ConfigService
             return config.UserEmail;
 
         throw new InvalidOperationException("Cannot resolve 'me': user email not found in config. Run 'config --login' or set it with 'config --email <your@email.com>'.");
+    }
+
+    public static string ResolveUserId()
+    {
+        var config = LoadConfig();
+        if (!string.IsNullOrEmpty(config.UserId))
+            return config.UserId;
+
+        throw new InvalidOperationException("Your user ID is not stored yet. Re-run 'config --login' (or 'config --pat <token>') to refresh it.");
     }
 
     public static string ResolveTeam(string project, string team = null)

@@ -13,7 +13,8 @@ internal static class PrListAction
         {
             var project = ConfigService.ResolveProject(opts.Project);
             var status = string.Equals(opts.Status, "all", StringComparison.OrdinalIgnoreCase) ? null : opts.Status;
-            var prs = await HttpService.ListPullRequests(project, opts.Repo, status, opts.Target, opts.Top, ct);
+            var creatorId = opts.Mine ? ConfigService.ResolveUserId() : null;
+            var prs = await HttpService.ListPullRequests(project, opts.Repo, status, opts.Target, opts.Top, creatorId, ct);
 
             if (prs.Count == 0)
             {

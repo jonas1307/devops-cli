@@ -234,7 +234,7 @@ public static class HttpService
     private static string NormalizeBranch(string branch) =>
         branch.StartsWith("refs/", StringComparison.OrdinalIgnoreCase) ? branch : $"refs/heads/{branch}";
 
-    public static async Task<List<PullRequestResponse>> ListPullRequests(string project, string repo, string status, string targetBranch, int top, CancellationToken cancellationToken = default)
+    public static async Task<List<PullRequestResponse>> ListPullRequests(string project, string repo, string status, string targetBranch, int top, string creatorId = null, CancellationToken cancellationToken = default)
     {
         using var client = await CreateClientAsync(cancellationToken);
         var path = string.IsNullOrEmpty(repo)
@@ -248,6 +248,8 @@ public static class HttpService
             request.AddQueryParameter("searchCriteria.status", status);
         if (!string.IsNullOrEmpty(targetBranch))
             request.AddQueryParameter("searchCriteria.targetRefName", NormalizeBranch(targetBranch));
+        if (!string.IsNullOrEmpty(creatorId))
+            request.AddQueryParameter("searchCriteria.creatorId", creatorId);
 
         var response = await client.ExecuteAsync(request, cancellationToken);
 
@@ -291,6 +293,53 @@ public static class HttpService
 
         if (!response.IsSuccessStatusCode)
             throw new Exception($"Failed to create pull request. Status: {response.StatusCode}. {response.Content}");
+
+        return JsonConvert.DeserializeObject<PullRequestResponse>(response.Content);
+    }
+
+    /// <summary>Casts the current user's vote on a pull request (self-adds as a reviewer if needed).</summary>
+    public static async Task VotePullRequest(string project, string repo, int pullRequestId, string userId, int vote, CancellationToken cancellationToken = default)
+    {
+        using var client = await CreateClientAsync(cancellationToken);
+        var request = new RestRequest($"{project}/_apis/git/repositories/{Uri.EscapeDataString(repo)}/pullrequests/{pullRequestId}/reviewers/{userId}", Method.Put);
+        request.AddQueryParameter("api-version", API_VERSION);
+        request.AddStringBody(JsonConvert.SerializeObject(new { vote }), DataFormat.Json);
+
+        var response = await client.ExecuteAsync(request, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+            throw new Exception($"Failed to vote on pull request {pullRequestId}. Status: {response.StatusCode}. {response.Content}");
+    }
+
+    /// <summary>Sets a pull request status (e.g. "abandoned"), returning the updated PR.</summary>
+    public static async Task<PullRequestResponse> SetPullRequestStatus(string project, string repo, int pullRequestId, string status, CancellationToken cancellationToken = default)
+    {
+        return await PatchPullRequest(project, repo, pullRequestId, new { status }, cancellationToken);
+    }
+
+    /// <summary>Completes (merges) a pull request using its last merge source commit.</summary>
+    public static async Task<PullRequestResponse> CompletePullRequest(string project, string repo, int pullRequestId, string lastMergeSourceCommitId, bool deleteSourceBranch, CancellationToken cancellationToken = default)
+    {
+        var body = new
+        {
+            status = "completed",
+            lastMergeSourceCommit = new { commitId = lastMergeSourceCommitId },
+            completionOptions = new { deleteSourceBranch }
+        };
+        return await PatchPullRequest(project, repo, pullRequestId, body, cancellationToken);
+    }
+
+    private static async Task<PullRequestResponse> PatchPullRequest(string project, string repo, int pullRequestId, object body, CancellationToken cancellationToken)
+    {
+        using var client = await CreateClientAsync(cancellationToken);
+        var request = new RestRequest($"{project}/_apis/git/repositories/{Uri.EscapeDataString(repo)}/pullrequests/{pullRequestId}", Method.Patch);
+        request.AddQueryParameter("api-version", API_VERSION);
+        request.AddStringBody(JsonConvert.SerializeObject(body), DataFormat.Json);
+
+        var response = await client.ExecuteAsync(request, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+            throw new Exception($"Failed to update pull request {pullRequestId}. Status: {response.StatusCode}. {response.Content}");
 
         return JsonConvert.DeserializeObject<PullRequestResponse>(response.Content);
     }

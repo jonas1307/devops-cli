@@ -26,7 +26,10 @@ var optionTypes = new[]
     typeof(PrListOptions),
     typeof(PrGetOptions),
     typeof(PrCreateOptions),
-    typeof(PrOpenOptions)
+    typeof(PrOpenOptions),
+    typeof(PrVoteOptions),
+    typeof(PrAbandonOptions),
+    typeof(PrCompleteOptions)
 };
 
 var result = Parser.Default.ParseArguments(args, optionTypes);
@@ -52,6 +55,9 @@ await result.MapResult(
         PrGetOptions o => PrGetAction.Execute(o, cts.Token),
         PrCreateOptions o => PrCreateAction.Execute(o, cts.Token),
         PrOpenOptions o => PrOpenAction.Execute(o, cts.Token),
+        PrVoteOptions o => PrVoteAction.Execute(o, cts.Token),
+        PrAbandonOptions o => PrAbandonAction.Execute(o, cts.Token),
+        PrCompleteOptions o => PrCompleteAction.Execute(o, cts.Token),
         _ => Task.FromResult(1)
     },
     _ => Task.FromResult(1)

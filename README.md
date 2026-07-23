@@ -373,7 +373,9 @@ On success it prints the new run ID, its state, and a link to follow it in the b
 
 ## Pull Request Commands
 
-Pull requests belong to a **repository**, specified with `--repo` (required for `pr-create`, optional filter for `pr-list`). `pr-get` and `pr-open` work by PR ID at the organization level, so they need neither project nor repo.
+Pull requests belong to a **repository**, specified with `--repo` (required for `pr-create`, optional filter for `pr-list`). `pr-get`, `pr-open`, `pr-vote`, `pr-abandon` and `pr-complete` work by PR ID and resolve the repository automatically, so they need neither project nor repo.
+
+> `pr-list --mine` and `pr-vote` need your user ID, which is captured during `config --login` / `config --pat`. If they report a missing user ID, re-run `config` to refresh it.
 
 ### `pr-list` — List pull requests
 
@@ -382,6 +384,7 @@ devops pr-list
 devops pr-list -r MyRepo -s active
 devops pr-list -r MyRepo -t main
 devops pr-list -s all -n 50
+devops pr-list --mine
 ```
 
 | Option | Alias | Description |
@@ -391,6 +394,7 @@ devops pr-list -s all -n 50
 | `--status` | `-s` | `active` (default), `completed`, `abandoned`, or `all` |
 | `--target` | `-t` | Filter by target branch (e.g., `main`) |
 | `--top` | `-n` | Maximum number of PRs to show (default: 25) |
+| `--mine` | `-m` | Only pull requests you created |
 
 ---
 
@@ -438,6 +442,51 @@ devops pr-open -i 123
 | Option | Alias | Description |
 |---|---|---|
 | `--id` | `-i` | Pull request ID (required) |
+
+---
+
+### `pr-vote` — Vote on a pull request
+
+Casts your vote (self-adding as a reviewer if needed). Works by PR ID; the repository is resolved automatically.
+
+```powershell
+devops pr-vote -i 123 -v approve
+devops pr-vote -i 123 -v reject
+devops pr-vote -i 123 -v reset
+```
+
+| Option | Alias | Description |
+|---|---|---|
+| `--id` | `-i` | Pull request ID (required) |
+| `--vote` | `-v` | `approve`, `approve-suggestions`, `reject`, `wait`, or `reset` (required) |
+
+---
+
+### `pr-abandon` — Abandon a pull request
+
+```powershell
+devops pr-abandon -i 123
+```
+
+| Option | Alias | Description |
+|---|---|---|
+| `--id` | `-i` | Pull request ID (required) |
+
+---
+
+### `pr-complete` — Complete (merge) a pull request
+
+Merges the PR using its last merge source commit. Fails if the PR has no merge commit (e.g. a draft or with conflicts).
+
+```powershell
+devops pr-complete -i 123
+devops pr-complete -i 123 --delete-source
+```
+
+| Option | Alias | Description |
+|---|---|---|
+| `--id` | `-i` | Pull request ID (required) |
+| `--delete-source` | | Delete the source branch after completing |
 
 ---
 

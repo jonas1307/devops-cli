@@ -313,7 +313,7 @@ Shows the most recent runs of a pipeline, newest first. Use the pipeline ID from
 
 ```powershell
 devops runs -i 42
-devops runs -i 42 -t 25
+devops runs -i 42 -n 25
 devops runs -i 42 -p AnotherProject
 ```
 
@@ -323,7 +323,7 @@ Output columns: `ID`, `NAME`, `STATE` (e.g. `inProgress`, `completed`), `RESULT`
 |---|---|---|
 | `--id` | `-i` | Pipeline (definition) ID (required). See `pipelines` |
 | `--project` | `-p` | Project name (uses default if configured) |
-| `--top` | `-t` | Number of most recent runs to show (default: 10) |
+| `--top` | `-n` | Number of most recent runs to show (default: 10) |
 
 ---
 

@@ -63,4 +63,13 @@ public class PullRequestCreateRequest
 
     [JsonProperty("isDraft")]
     public bool IsDraft { get; set; }
+
+    [JsonProperty("reviewers", NullValueHandling = NullValueHandling.Ignore)]
+    public List<PullRequestReviewerRef> Reviewers { get; set; }
+}
+
+public class PullRequestReviewerRef
+{
+    [JsonProperty("id")]
+    public string Id { get; set; }
 }

@@ -232,6 +232,9 @@ public class GitCommitRef
 
 public class PullRequestRepository
 {
+    [JsonProperty("id")]
+    public string Id { get; set; }
+
     [JsonProperty("name")]
     public string Name { get; set; }
 
@@ -241,8 +244,23 @@ public class PullRequestRepository
 
 public class PullRequestProject
 {
+    [JsonProperty("id")]
+    public string Id { get; set; }
+
     [JsonProperty("name")]
     public string Name { get; set; }
+}
+
+public class IdentityListResponse
+{
+    [JsonProperty("value")]
+    public List<IdentityRef> Value { get; set; }
+}
+
+public class IdentityRef
+{
+    [JsonProperty("id")]
+    public string Id { get; set; }
 }
 
 public class PullRequestReviewer
